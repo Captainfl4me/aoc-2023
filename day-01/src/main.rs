@@ -1,5 +1,4 @@
 pub mod search_tree;
-use search_tree::StringSearchTree;
 
 fn main() {
     let input = include_str!("./input.txt");
@@ -41,48 +40,41 @@ fn calib_value(hash: &str) -> u32 {
 
 fn calib_value_imprv(hash: &str) -> u32 {
     let mut first_digit: u32 = 0;
+    let mut first_digit_index: i32 = 10000;
+
     let mut last_digit: u32 = 0;
-    let mut str_buf: String = String::new();
-
-    let mut search_tree = StringSearchTree::new();
-    search_tree.insert_string_on_root("one", 1);
-    search_tree.insert_string_on_root("two", 2);
-    search_tree.insert_string_on_root("three", 3);
-    search_tree.insert_string_on_root("four", 4);
-    search_tree.insert_string_on_root("five", 5);
-    search_tree.insert_string_on_root("six", 6);
-    search_tree.insert_string_on_root("seven", 7);
-    search_tree.insert_string_on_root("eight", 8);
-    search_tree.insert_string_on_root("nine", 9);
-
-    for char in hash.chars() {
-        let mut num: Option<u32> = Option::None;
-        if char.is_ascii_digit() {
-           num = Some(char.to_digit(10).unwrap());
-        } else if char.is_ascii_alphabetic() {
-            str_buf.push(char);
-
-            let match_result = search_tree.match_string_from_root(&str_buf);
-            if match_result.length <= 0 {
-                str_buf.clear();
-            } else if match_result.length < str_buf.len().try_into().unwrap() {
-                str_buf.clear();
-                str_buf.push(char);
-            } else if match_result.length == str_buf.len().try_into().unwrap() {
-                if match_result.value != 0 {
-                    num = Some(match_result.value);
-                    str_buf.clear();
-                }
+    let mut last_digit_index: i32 = -1;
+    
+    let numbers = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+    for (num_index, number) in numbers.iter().enumerate() {
+        for (i, _) in hash.match_indices(number) {
+            let i_unwrap = i.try_into().unwrap();
+            let num_index_unwrap: u32 = num_index.try_into().unwrap();
+            if i_unwrap < first_digit_index {
+                first_digit = num_index_unwrap + 1;
+                first_digit_index = i_unwrap;
             }
-        }
-
-        if num.is_some() {
-            if first_digit == 0 {
-                first_digit = num.unwrap();
-            }
-            last_digit = num.unwrap();
+            if i_unwrap > last_digit_index {
+                last_digit = num_index_unwrap + 1;
+                last_digit_index = i_unwrap;
+            } 
         }
     }
+
+    for (i, char) in hash.chars().enumerate() {
+        if char.is_ascii_digit() {
+            let i_unwrap = i.try_into().unwrap();
+            if i_unwrap < first_digit_index {
+                first_digit = char.to_digit(10).unwrap();
+                first_digit_index = i_unwrap;
+            }
+            if i_unwrap > last_digit_index {
+                last_digit = char.to_digit(10).unwrap();
+                last_digit_index = i_unwrap;
+            } 
+        }
+    }
+
     first_digit*10 + last_digit
 }
 
@@ -111,6 +103,8 @@ mod tests {
 
     #[test]
     fn test_search_tree() {
+        use search_tree::StringSearchTree;
+
         let mut tree = StringSearchTree::new();
         tree.insert_string_on_root("one", 1);
         tree.insert_string_on_root("two", 2);
