@@ -17,7 +17,6 @@ fn sum_part_number(input: &str) -> u32 {
         if keep_current_part {
             valid_parts.push(current_part);
             result += current_part;
-            println!("n = {}", current_part);
             current_part = 0;
             keep_current_part = false;
         }
@@ -49,7 +48,6 @@ fn sum_part_number(input: &str) -> u32 {
                 if keep_current_part {
                     valid_parts.push(current_part);
                     result += current_part;
-                    println!("n = {}", current_part);
                 }
                 current_part = 0;
                 keep_current_part = false;
@@ -57,14 +55,8 @@ fn sum_part_number(input: &str) -> u32 {
         }
     }
     if keep_current_part {
-        println!("n = {}", current_part);
         result += current_part;
     }
-    valid_parts.sort();
-    valid_parts.dedup();
-
-    let sum: u32 = dbg!(valid_parts.iter().sum());
-    dbg!(valid_parts.len());
 
     result
 }
