@@ -79,7 +79,7 @@ fn calib_value_imprv(hash: &str) -> u32 {
 }
 
 #[cfg(test)]
-mod tests {
+mod tests_day01 {
     use super::*;
 
     #[test]
