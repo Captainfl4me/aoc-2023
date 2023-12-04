@@ -136,7 +136,7 @@ fn sum_part_number(input: &str) -> u32 {
 }
 
 #[cfg(test)]
-mod tests_day02 {
+mod tests_day03 {
     use super::*;
 
     #[test]
