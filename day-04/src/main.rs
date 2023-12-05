@@ -68,7 +68,7 @@ fn card_point(line: &str) -> u32 {
 }
 
 #[cfg(test)]
-mod tests_day03 {
+mod tests_day04 {
     use super::*;
 
     #[test]
