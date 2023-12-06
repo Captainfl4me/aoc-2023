@@ -1,9 +1,61 @@
-use std::collections::HashMap;
-
 fn main() {
     let input = include_str!("./input.txt");
     dbg!(part_1(input));
     // dbg!(part_2(input));
+}
+
+pub struct CustomMapRange {
+    start_src: u64,
+    start_dst: u64,
+    length: u64
+}
+impl CustomMapRange {
+    pub fn new(start_src: u64, start_dst: u64, length: u64) -> CustomMapRange {
+        let cmp = CustomMapRange {
+            start_src: start_src,
+            start_dst: start_dst,
+            length
+        };
+        cmp
+    }
+    pub fn from_str(input: &str) -> CustomMapRange{
+        let num_split: Vec<u64> = input.split(" ").map(|f| f.to_string().parse::<u64>().unwrap()).collect();
+        CustomMapRange::new(num_split[1], num_split[0], num_split[2])
+    }
+
+    pub fn get(&self, num_src: u64) -> Option<u64> {
+        if num_src >= self.start_src && num_src < self.start_src+self.length {
+            let distance = num_src - self.start_src;
+            Some(self.start_dst + distance)
+        } else {
+            None
+        }
+    }
+}
+
+pub struct CustomMultipleMapRange {
+    ranges: Vec<CustomMapRange>
+}
+impl CustomMultipleMapRange {
+    pub fn new() -> CustomMultipleMapRange {
+        CustomMultipleMapRange { ranges:Vec::new() }
+    }
+
+    pub fn clear(&mut self) {
+        self.ranges.clear()
+    }
+
+    pub fn add_range(&mut self, new_range: CustomMapRange) {
+        self.ranges.push(new_range);
+    }
+
+    pub fn get(&self, num_src: u64) -> u64 {
+        for range in self.ranges.iter() {
+            let check_map = range.get(num_src);
+            if check_map.is_some() { return check_map.unwrap(); }
+        }
+        num_src
+    }
 }
 
 fn part_1(input: &str) -> u64{
@@ -13,14 +65,11 @@ fn part_1(input: &str) -> u64{
     let mut last_src = seeds;
 
     let mut is_building_map = false;
-    let mut current_map : HashMap<u64, u64> = HashMap::new(); 
+    let mut current_map = CustomMultipleMapRange::new(); 
     for line in input_lines {
         if line.is_empty() {
             if is_building_map {
-                last_src = last_src.iter().map(|f| match current_map.get(f) {
-                    Some(val) => { *val },
-                    None => { *f }
-                }).collect();
+                last_src = last_src.iter().map(|f| current_map.get(*f)).collect();
                 is_building_map = false;
                 current_map.clear();
             }
@@ -28,32 +77,14 @@ fn part_1(input: &str) -> u64{
         }else if !is_building_map && line.contains("map") {
             is_building_map = true;
         } else {
-            current_map.extend(create_sub_source_destination_map(line).into_iter());
+            current_map.add_range(CustomMapRange::from_str(line));
         }
     }
     if is_building_map {
-        last_src = last_src.iter().map(|f| match current_map.get(f) {
-            Some(val) => { *val },
-            None => { *f }
-        }).collect();
+        last_src = last_src.iter().map(|f| current_map.get(*f)).collect();
     }
 
     *last_src.iter().min().unwrap()
-}
-
-fn create_sub_source_destination_map(input: &str) -> HashMap<u64, u64> {
-    let num_split: Vec<u64> = input.split(" ").map(|f| f.to_string().parse::<u64>().unwrap()).collect();
-    let mut res_map: HashMap<u64, u64> = HashMap::new();
-
-    let dest_start = num_split[0];
-    let src_start = num_split[1];
-    let map_length = num_split[2];
-
-    for i in 0..map_length {
-        res_map.insert(src_start+i, dest_start+i);
-    } 
-
-    res_map
 }
 
 
@@ -62,13 +93,23 @@ mod tests_day05 {
     use super::*;
     
     #[test]
-    fn test_sub_create_source_destination_map(){
-        let mut map = create_sub_source_destination_map("50 98 2");
-        let map2 = create_sub_source_destination_map("52 50 48");
-        map.extend(map2.into_iter());
-        assert_eq!(*map.get(&(55 as u64)).unwrap(), 57);
-        assert_eq!(*map.get(&(79 as u64)).unwrap(), 81);
-        assert_eq!(map.get(&(14 as u64)).is_none(), true);
+    fn test_custom_map_range(){
+        let map = CustomMapRange::from_str("50 98 2");
+        let map2 = CustomMapRange::from_str("52 50 48");
+        assert_eq!(map.get(98).unwrap(), 50);
+        assert_eq!(map2.get(79).unwrap(), 81);
+        assert_eq!(map.get(14).is_none(), true);
+    }
+    
+    #[test]
+    fn test_multiple_map_range(){
+        let mut map = CustomMultipleMapRange { ranges: Vec::new() };
+        map.add_range(CustomMapRange::from_str("50 98 2"));
+        map.add_range(CustomMapRange::from_str("52 50 48"));
+        assert_eq!(map.get(55), 57);
+        assert_eq!(map.get(79), 81);
+        assert_eq!(map.get(14), 14);
+        assert_eq!(map.get(13), 13);
     }
 
     #[test]
