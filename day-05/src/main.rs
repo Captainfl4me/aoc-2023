@@ -4,6 +4,36 @@ fn main() {
     // dbg!(part_2(input));
 }
 
+pub struct CustomRange {
+    start_src: u64,
+    length: u64,
+}
+impl CustomRange {
+    pub fn new(start_src: u64, length: u64) -> CustomRange {
+        CustomRange { start_src: start_src, length: length }
+    }
+    pub fn start_src(&self) -> u64 {
+        self.start_src
+    }
+    pub fn end_src(&self) -> u64 {
+        self.start_src + self.length - 1
+    }
+
+    pub fn does_intersect(&self, range: &CustomRange) -> bool {
+        range.start_src >= self.start_src && range.start_src <= self.end_src()
+            || range.end_src() >= self.start_src && range.end_src() <= self.end_src()
+            || range.start_src <= self.start_src && range.end_src() >= self.end_src()
+    }
+    pub fn intersect(&self, range: &CustomRange) -> Option<CustomRange> {
+        if self.does_intersect(range) {
+            let start = std::cmp::max(self.start_src, range.start_src);
+            let end = std::cmp::min(self.end_src(), range.end_src());
+            Some(CustomRange { start_src:start, length: end - start + 1 })
+        } else {
+            None
+        }
+    }
+}
 pub struct CustomMapRange {
     start_src: u64,
     start_dst: u64,
@@ -27,6 +57,17 @@ impl CustomMapRange {
         if num_src >= self.start_src && num_src < self.start_src+self.length {
             let distance = num_src - self.start_src;
             Some(self.start_dst + distance)
+        } else {
+            None
+        }
+    }
+    pub fn get_range(&self, range: &CustomRange) -> Option<CustomRange> {
+        let self_range = CustomRange::new(self.start_src, self.length);
+        let range_src = self_range.intersect(range);
+        if range_src.is_some() {
+            let range_src_unwrap = range_src.unwrap();
+            let distance = range_src_unwrap.start_src() - self.start_src;
+            Some(CustomRange { start_src: self.start_dst + distance, length: range_src_unwrap.length })
         } else {
             None
         }
