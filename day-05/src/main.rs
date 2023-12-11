@@ -1,9 +1,10 @@
 fn main() {
     let input = include_str!("./input.txt");
     dbg!(part_1(input));
-    // dbg!(part_2(input));
+    dbg!(part_2(input));
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct CustomRange {
     start_src: u64,
     length: u64,
@@ -33,7 +34,22 @@ impl CustomRange {
             None
         }
     }
+    pub fn intersect_inverse(&self, range: &CustomRange) -> Vec<CustomRange> {
+        let mut not_intersect_vector: Vec<CustomRange> = Vec::new();
+        
+        if self.start_src < range.start_src {
+            let end = std::cmp::min(range.start_src - 1, self.end_src());
+            not_intersect_vector.push(CustomRange { start_src: self.start_src, length: end - self.start_src + 1 });
+        }
+        if self.end_src() > range.end_src() {
+            let start = std::cmp::max(self.start_src, range.end_src() + 1);
+            not_intersect_vector.push(CustomRange { start_src: start, length: self.end_src() - start + 1 });
+        }
+        not_intersect_vector
+    }
 }
+
+#[derive(Copy, Clone, Debug)]
 pub struct CustomMapRange {
     start_src: u64,
     start_dst: u64,
@@ -41,12 +57,11 @@ pub struct CustomMapRange {
 }
 impl CustomMapRange {
     pub fn new(start_src: u64, start_dst: u64, length: u64) -> CustomMapRange {
-        let cmp = CustomMapRange {
+        CustomMapRange {
             start_src: start_src,
             start_dst: start_dst,
             length
-        };
-        cmp
+        }
     }
     pub fn from_str(input: &str) -> CustomMapRange{
         let num_split: Vec<u64> = input.split(" ").map(|f| f.to_string().parse::<u64>().unwrap()).collect();
@@ -61,16 +76,22 @@ impl CustomMapRange {
             None
         }
     }
-    pub fn get_range(&self, range: &CustomRange) -> Option<CustomRange> {
+    pub fn get_range(&self, range: &CustomRange) -> Vec<CustomRange> {
+        let mut match_vec: Vec<CustomRange> = Vec::new();
         let self_range = CustomRange::new(self.start_src, self.length);
         let range_src = self_range.intersect(range);
         if range_src.is_some() {
             let range_src_unwrap = range_src.unwrap();
             let distance = range_src_unwrap.start_src() - self.start_src;
-            Some(CustomRange { start_src: self.start_dst + distance, length: range_src_unwrap.length })
+            match_vec.push(CustomRange { start_src: self.start_dst + distance, length: range_src_unwrap.length });
+            let unchange_ranges = range.intersect_inverse(&self_range);
+            for unchande_range in unchange_ranges.iter() {
+                match_vec.push(*unchande_range);
+            }
         } else {
-            None
+            match_vec.push(*range);
         }
+        match_vec
     }
 }
 
@@ -96,6 +117,33 @@ impl CustomMultipleMapRange {
             if check_map.is_some() { return check_map.unwrap(); }
         }
         num_src
+    }
+
+    pub fn get_range(&self, range_src_key: &CustomRange) -> Vec<CustomRange> {
+        let mut ranges_src = vec![ *range_src_key ];
+        let mut next_ranges: Vec<CustomRange> = Vec::new();
+
+        let mut res: Vec<CustomRange> = Vec::new();
+        for range in self.ranges.iter() {
+            for range_src in ranges_src.iter() {
+                let mut get_range = range.get_range(range_src);
+                let primary_result = get_range.remove(0);
+                if primary_result == *range_src_key {
+                    next_ranges.push(primary_result);
+                } else {
+                    res.push(primary_result);
+                }
+                for not_intersect_range in get_range {
+                    next_ranges.push(not_intersect_range);
+                }
+            }
+            ranges_src = next_ranges.to_vec();
+            next_ranges.clear();
+        }
+        if res.is_empty() {
+            res.push(*range_src_key);
+        }
+        res
     }
 }
 
@@ -128,6 +176,42 @@ fn part_1(input: &str) -> u64{
     *last_src.iter().min().unwrap()
 }
 
+pub fn part_2(input: &str) -> u64 {
+    let mut input_lines = input.lines();
+    let seeds: Vec<u64> = input_lines.next().unwrap().split(":").last().unwrap().trim().split(" ").map(|f| f.parse::<u64>().unwrap()).collect();
+
+    let mut seeds_ranges: Vec<CustomRange> = Vec::new();
+    let mut i = 0;
+    loop {
+        if i >= seeds.len() - 1 { break; }
+        seeds_ranges.push(CustomRange::new(seeds[i], seeds[i+1]));
+        i += 2;
+    }
+
+    let mut last_src = seeds_ranges;
+
+    let mut is_building_map = false;
+    let mut current_map = CustomMultipleMapRange::new(); 
+    for line in input_lines {
+        if line.is_empty() {
+            if is_building_map {
+                last_src = last_src.iter().map(|f| current_map.get_range(f)).flatten().collect();
+                is_building_map = false;
+                current_map.clear();
+            }
+            continue;
+        }else if !is_building_map && line.contains("map") {
+            is_building_map = true;
+        } else {
+            current_map.add_range(CustomMapRange::from_str(line));
+        }
+    }
+    if is_building_map {
+        last_src = last_src.iter().map(|f| current_map.get_range(f)).flatten().collect();
+    }
+
+    last_src.iter().map(|f| f.start_src).min().unwrap()
+}
 
 #[cfg(test)]
 mod tests_day05 {
@@ -140,6 +224,11 @@ mod tests_day05 {
         assert_eq!(map.get(98).unwrap(), 50);
         assert_eq!(map2.get(79).unwrap(), 81);
         assert_eq!(map.get(14).is_none(), true);
+        let res = dbg!(map.get_range(&CustomRange::new(96, 6)));
+        assert_eq!(res.len(), 3);
+        assert_eq!(res[0].length, 2);
+        assert_eq!(res[1].length, 2);
+        assert_eq!(res[2].length, 2);
     }
     
     #[test]
@@ -157,5 +246,22 @@ mod tests_day05 {
     fn test_part1(){
         let input = include_str!("./test.txt");
         assert_eq!(part_1(input), 35);
+    }
+    
+    #[test]
+    fn test_range_get(){
+        let mut map = CustomMultipleMapRange { ranges: Vec::new() };
+        map.add_range(CustomMapRange::from_str("50 90 5"));
+        map.add_range(CustomMapRange::from_str("55 95 5"));
+        let res = map.get_range(&CustomRange { start_src: 90, length: 10 });
+        assert_eq!(res.len(), 2);
+        let res = map.get_range(&CustomRange { start_src: 88, length: 10 });
+        assert_eq!(res.len(), 3);
+    }
+
+    #[test]
+    fn test_part2(){
+        let input = include_str!("./test.txt");
+        assert_eq!(part_2(input), 46);
     }
 }
