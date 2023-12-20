@@ -9,6 +9,11 @@ pub struct CustomRange {
     start_src: u64,
     length: u64,
 }
+#[derive(Debug)]
+pub struct CustomRangeMatch {
+    range: CustomRange,
+    has_match: bool,
+}
 impl CustomRange {
     pub fn new(start_src: u64, length: u64) -> CustomRange {
         CustomRange { start_src: start_src, length: length }
@@ -76,20 +81,20 @@ impl CustomMapRange {
             None
         }
     }
-    pub fn get_range(&self, range: &CustomRange) -> Vec<CustomRange> {
-        let mut match_vec: Vec<CustomRange> = Vec::new();
+    pub fn get_range(&self, range: &CustomRange) -> Vec<CustomRangeMatch> {
+        let mut match_vec: Vec<CustomRangeMatch> = Vec::new();
         let self_range = CustomRange::new(self.start_src, self.length);
         let range_src = self_range.intersect(range);
         if range_src.is_some() {
             let range_src_unwrap = range_src.unwrap();
             let distance = range_src_unwrap.start_src() - self.start_src;
-            match_vec.push(CustomRange { start_src: self.start_dst + distance, length: range_src_unwrap.length });
+            match_vec.push(CustomRangeMatch { range: CustomRange { start_src: self.start_dst + distance, length: range_src_unwrap.length }, has_match: true});
             let unchange_ranges = range.intersect_inverse(&self_range);
             for unchande_range in unchange_ranges.iter() {
-                match_vec.push(*unchande_range);
+                match_vec.push(CustomRangeMatch { range: *unchande_range, has_match: false });
             }
         } else {
-            match_vec.push(*range);
+            match_vec.push(CustomRangeMatch { range: *range, has_match: false });
         }
         match_vec
     }
@@ -121,28 +126,44 @@ impl CustomMultipleMapRange {
 
     pub fn get_range(&self, range_src_key: &CustomRange) -> Vec<CustomRange> {
         let mut ranges_src = vec![ *range_src_key ];
-        let mut next_ranges: Vec<CustomRange> = Vec::new();
-
         let mut res: Vec<CustomRange> = Vec::new();
-        for range in self.ranges.iter() {
-            for range_src in ranges_src.iter() {
-                let mut get_range = range.get_range(range_src);
-                let primary_result = get_range.remove(0);
-                if primary_result == *range_src_key {
-                    next_ranges.push(primary_result);
+
+        let mut new_ranges_src: Vec<CustomRange> = Vec::new();
+        let mut match_vec: Vec<CustomRange> = Vec::new();
+        loop {
+            for range_src in new_ranges_src.iter() {
+                let mut has_match = true;
+                for range in self.ranges.iter() {
+                    let get_range = range.get_range(range_src);
+                    if get_range.len() == 1 && get_range[0].has_match == false {
+                        has_match = false;
+                    } else {
+                        for match_range in get_range {
+                            if match_range.has_match {
+                                res.push(match_range.range);
+                            } else {
+                                match_vec.push(match_range.range);
+                            }
+                        }
+                        has_match = true;
+                        break;
+                    }
+                }
+                if has_match == false {
+                    res.push(*range_src);
                 } else {
-                    res.push(primary_result);
+                    ranges_src.append(&mut match_vec);
                 }
-                for not_intersect_range in get_range {
-                    next_ranges.push(not_intersect_range);
-                }
+                match_vec.clear(); // maybe useless!
             }
-            ranges_src = next_ranges.to_vec();
-            next_ranges.clear();
+            new_ranges_src = ranges_src.clone();
+            ranges_src.clear();
+
+            if new_ranges_src.len() <= 0 {
+                break;
+            }
         }
-        if res.is_empty() {
-            res.push(*range_src_key);
-        }
+
         res
     }
 }
@@ -210,7 +231,8 @@ pub fn part_2(input: &str) -> u64 {
         last_src = last_src.iter().map(|f| current_map.get_range(f)).flatten().collect();
     }
 
-    last_src.iter().map(|f| f.start_src).min().unwrap()
+    let start_range: Vec<u64> = last_src.iter().map(|f| f.start_src).collect();
+    start_range.into_iter().min().unwrap()
 }
 
 #[cfg(test)]
@@ -224,11 +246,11 @@ mod tests_day05 {
         assert_eq!(map.get(98).unwrap(), 50);
         assert_eq!(map2.get(79).unwrap(), 81);
         assert_eq!(map.get(14).is_none(), true);
-        let res = dbg!(map.get_range(&CustomRange::new(96, 6)));
+        let res = map.get_range(&CustomRange::new(96, 6));
         assert_eq!(res.len(), 3);
-        assert_eq!(res[0].length, 2);
-        assert_eq!(res[1].length, 2);
-        assert_eq!(res[2].length, 2);
+        assert_eq!(res[0].range.length, 2);
+        assert_eq!(res[1].range.length, 2);
+        assert_eq!(res[2].range.length, 2);
     }
     
     #[test]
@@ -255,8 +277,11 @@ mod tests_day05 {
         map.add_range(CustomMapRange::from_str("55 95 5"));
         let res = map.get_range(&CustomRange { start_src: 90, length: 10 });
         assert_eq!(res.len(), 2);
-        let res = map.get_range(&CustomRange { start_src: 88, length: 10 });
-        assert_eq!(res.len(), 3);
+        let res = map.get_range(&CustomRange { start_src: 88, length: 14 });
+        assert_eq!(res.len(), 4);
+        assert_eq!(res[0].start_src, 50);
+        let res = map.get_range(&CustomRange { start_src: 92, length: 10 });
+        assert_eq!(res[0].start_src, 52);
     }
 
     #[test]
