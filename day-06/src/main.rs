@@ -64,7 +64,7 @@ impl Race {
 }
 
 #[cfg(test)]
-mod tests_day05 {
+mod tests_day06 {
     use super::*;
     
     #[test]
