@@ -2,10 +2,10 @@ use std::{collections::HashMap, cmp::Ordering};
 
 fn main() {
     let input = include_str!("./input.txt");
-    dbg!(part_1(input));
+    dbg!(part_2(input));
 }
 
-fn part_1(input: &str) -> u64 {
+fn part_2(input: &str) -> u64 {
     let mut hands = input.lines().map(|line| Hand::from_str(line)).collect::<Vec<Hand>>();
     hands.sort_by(|a,b| a.cmp(b));
     hands.into_iter().map(|f| f.bid).enumerate().reduce(|prev, (index,hand)| (index, prev.1 + hand * u64::try_from(index+1).unwrap())).unwrap().1
@@ -16,7 +16,7 @@ enum Card {
     A = 13,
     K = 12,
     Q = 11,
-    J = 10,
+    J = 0,
     T = 9,
     N9 = 8,
     N8 = 7,
@@ -80,6 +80,7 @@ impl Hand {
         let hand_sorted_og = self.sorted().cards;
         let mut hand_sorted_dedup = hand_sorted_og.clone();
         hand_sorted_dedup.dedup();
+        hand_sorted_dedup = hand_sorted_dedup.into_iter().filter(|card| card!=&Card::J).collect();
 
         let mut card_map: HashMap<Card, u32> = HashMap::new();
         for card in hand_sorted_og.iter() {
@@ -87,35 +88,38 @@ impl Hand {
             *count += 1;
         }
 
-        if hand_sorted_dedup.len() == 1 {
+        if hand_sorted_dedup.len() == 1  || hand_sorted_dedup.len() == 0{
             HandType::FiveOfAKind
         } else if hand_sorted_dedup.len() == 2 {
-            // Four of a kind or full house
-            let mut is_four_of_akind = false;
-            for (_, count) in card_map.iter() {
-                if *count == 4 {
-                    is_four_of_akind = true;
-                    break;
-                }
-            }
-            if is_four_of_akind {
+            let joker_count = *card_map.get(&Card::J).get_or_insert(&0);
+
+            if *joker_count >= 2 {
                 HandType::FourOfAKind
+            } else if *joker_count == 1 {
+                if card_map.values().any(|&x| x == 3) {
+                    HandType::FourOfAKind
+                } else {
+                    HandType::FullHouse
+                }
             } else {
-                HandType::FullHouse
+                if card_map.values().any(|&x| x == 4) {
+                    HandType::FourOfAKind
+                } else {
+                    HandType::FullHouse
+                }
             }
         } else if hand_sorted_dedup.len() == 3 {
             // Three of a kind or two pairs
-            let mut is_three_of_akind = false;
-            for (_, count) in card_map.iter() {
-                if *count == 3 {
-                    is_three_of_akind = true;
-                    break;
-                }
-            }
-            if is_three_of_akind {
+            let joker_count = *card_map.get(&Card::J).get_or_insert(&0);
+
+            if *joker_count >= 1 {
                 HandType::ThreeOfAKind
             } else {
-                HandType::TwoPairs
+                if card_map.values().any(|&x| x == 3) {
+                    HandType::ThreeOfAKind
+                } else {
+                    HandType::TwoPairs
+                }
             }
         } else if hand_sorted_dedup.len() == 4 {
             HandType::OnePair
@@ -146,7 +150,7 @@ impl Hand {
 }
 
 #[cfg(test)]
-mod tests_day06 {
+mod tests_day07_02 {
     use super::*;
     
     #[test]
@@ -171,30 +175,30 @@ mod tests_day06 {
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::FourOfAKind);
         
-        let input = "K33KK 0";
+        let input = "K33JK 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::FullHouse);
         
-        let input = "K8K4K 0";
+        let input = "K8J4J 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::ThreeOfAKind);
         
-        let input = "KTK44 0";
+        let input = "KTJ44 0";
         let hand = Hand::from_str(input);
-        assert_eq!(hand.hand_type(), HandType::TwoPairs);
+        assert_eq!(hand.hand_type(), HandType::ThreeOfAKind);
         
         let input = "A2345 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::HighCard);
         
-        let input = "KKKKK 0";
+        let input = "KJJKK 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::FiveOfAKind);
     }
 
     #[test]
-    fn test_part1() {
+    fn test_part2() {
         let input = include_str!("./test.txt");
-        assert_eq!(part_1(input), 6440);
+        assert_eq!(part_2(input), 5905);
     }
 }
