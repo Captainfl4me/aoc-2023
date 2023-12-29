@@ -154,7 +154,7 @@ impl Map {
 }
 
 #[cfg(test)]
-mod test_day10 {
+mod test_day11 {
     use crate::*;
 
     #[test]
