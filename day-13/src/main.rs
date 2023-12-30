@@ -182,7 +182,7 @@ fn find_diff_mirror(input: &str) -> Mirror {
 }
 
 #[cfg(test)]
-mod test_day12 {
+mod test_day13 {
     use crate::*;
 
     #[test]
