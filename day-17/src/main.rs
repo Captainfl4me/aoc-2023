@@ -4,12 +4,16 @@ use std::cmp::Ordering;
 fn main() {
     let input = include_str!("./input.txt");
     dbg!(part_1(input));
-    // dbg!(part_2(input));
+    dbg!(part_2(input));
 }
 
 fn part_1(input: &str) -> u64 {
     let map = Map::from_str(input);
     map.compute_min_heat_loss(1, 3)
+}
+fn part_2(input: &str) -> u64 {
+    let map = Map::from_str(input);
+    map.compute_min_heat_loss(4, 10)
 }
 
 #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -183,5 +187,11 @@ mod tests_day_17 {
     fn test_part_1() {
         let input = include_str!("./test.txt");
         assert_eq!(part_1(input), 102);
+    }
+
+    #[test]
+    fn test_part_2() {
+        let input = include_str!("./test.txt");
+        assert_eq!(part_2(input), 94);
     }
 }
