@@ -1,11 +1,11 @@
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-10/input.txt");
     dbg!(part_1(input));
     dbg!(part_2(input));
 }
 
 fn part_1(input: &str) -> u32 {
-    let mut map = Map::new(input); 
+    let mut map = Map::new(input);
     map.set_start_open_directions();
 
     let path_length = map.define_loop();
@@ -14,7 +14,7 @@ fn part_1(input: &str) -> u32 {
 }
 
 fn part_2(input: &str) -> u32 {
-    let mut map = Map::new(input); 
+    let mut map = Map::new(input);
     map.set_start_open_directions();
     map.define_loop();
     map.count_tiles_inside()
@@ -55,7 +55,7 @@ impl Pipe {
             '7' => Self::SouthWest,
             '.' => Self::Ground,
             'S' => Self::Start,
-            _ => panic!("Invalid pipe")
+            _ => panic!("Invalid pipe"),
         }
     }
 }
@@ -84,16 +84,16 @@ impl Tile {
                 Pipe::Ground => [Direction::None, Direction::None],
                 Pipe::Start => [Direction::None, Direction::None],
             },
-            pipe
+            pipe,
         }
     }
 
     pub fn is_coord_adjacent(&self, coord: (&u32, &u32)) -> bool {
         let (x, y) = coord;
-        (*x == self.x && self.y > 0 && *y == self.y - 1) ||
-        (*x == self.x + 1 && *y == self.y) ||
-        (*x == self.x && *y == self.y + 1) ||
-        (self.x > 0 && *x == self.x - 1 && *y == self.y)
+        (*x == self.x && self.y > 0 && *y == self.y - 1)
+            || (*x == self.x + 1 && *y == self.y)
+            || (*x == self.x && *y == self.y + 1)
+            || (self.x > 0 && *x == self.x - 1 && *y == self.y)
     }
 
     pub fn coord_from_direction(&self, direction: &Direction) -> (u32, u32) {
@@ -128,7 +128,7 @@ struct Map {
     width: u32,
     height: u32,
 }
-impl Map{
+impl Map {
     pub fn new(input: &str) -> Self {
         let mut tiles = Vec::new();
         let mut width = 0;
@@ -150,18 +150,29 @@ impl Map{
 
     fn set_start_open_directions(&mut self) {
         let tiles_copy = self.tiles.clone();
-        let start  = self.tiles.iter_mut().find(|t| t.pipe == Pipe::Start).unwrap();
-        let adjacent_tiles: Vec<&Tile> = tiles_copy.iter().filter(|t| start.is_coord_adjacent((&t.x, &t.y))).collect();
-        
+        let start = self
+            .tiles
+            .iter_mut()
+            .find(|t| t.pipe == Pipe::Start)
+            .unwrap();
+        let adjacent_tiles: Vec<&Tile> = tiles_copy
+            .iter()
+            .filter(|t| start.is_coord_adjacent((&t.x, &t.y)))
+            .collect();
+
         for adjacent_tile in adjacent_tiles.iter() {
             if adjacent_tile.is_open_to_coord((&start.x, &start.y)) {
                 if start.open_directions[0] == Direction::None {
-                    start.open_directions[0] = start.relative_direction_from_coord((&adjacent_tile.x, &adjacent_tile.y));
-                    if start.open_directions[0] == Direction::North || start.open_directions[0] == Direction::South {
+                    start.open_directions[0] =
+                        start.relative_direction_from_coord((&adjacent_tile.x, &adjacent_tile.y));
+                    if start.open_directions[0] == Direction::North
+                        || start.open_directions[0] == Direction::South
+                    {
                         start.loop_dir = Some(start.open_directions[0]);
                     }
                 } else {
-                    start.open_directions[1] = start.relative_direction_from_coord((&adjacent_tile.x, &adjacent_tile.y))
+                    start.open_directions[1] =
+                        start.relative_direction_from_coord((&adjacent_tile.x, &adjacent_tile.y))
                 }
             }
         }
@@ -169,7 +180,11 @@ impl Map{
 
     pub fn define_loop(&mut self) -> u32 {
         let self_copy = self.clone();
-        let start = self_copy.tiles.iter().find(|t| t.pipe == Pipe::Start).unwrap();
+        let start = self_copy
+            .tiles
+            .iter()
+            .find(|t| t.pipe == Pipe::Start)
+            .unwrap();
 
         let mut current_tile = start;
         let mut next_dir = &start.open_directions[0];
@@ -177,26 +192,39 @@ impl Map{
         let mut path_length = 1;
         loop {
             if next_dir.is_vertical() {
-                self.get_tile_mut(current_tile.x, current_tile.y).unwrap().loop_dir = Some(*next_dir);
+                self.get_tile_mut(current_tile.x, current_tile.y)
+                    .unwrap()
+                    .loop_dir = Some(*next_dir);
             } else {
-                self.get_tile_mut(current_tile.x, current_tile.y).unwrap().loop_dir = Some(*last_next_dir);
+                self.get_tile_mut(current_tile.x, current_tile.y)
+                    .unwrap()
+                    .loop_dir = Some(*last_next_dir);
             }
             last_next_dir = next_dir;
             let next_coord = current_tile.coord_from_direction(&next_dir);
             let next_tile = self_copy.get_tile(next_coord.0, next_coord.1).unwrap();
 
             path_length += 1;
-            next_dir = next_tile.open_directions
+            next_dir = next_tile
+                .open_directions
                 .iter()
-                .filter(|dir| **dir!=next_tile.relative_direction_from_coord((&current_tile.x, &current_tile.y)))
+                .filter(|dir| {
+                    **dir
+                        != next_tile
+                            .relative_direction_from_coord((&current_tile.x, &current_tile.y))
+                })
                 .next()
                 .unwrap();
             current_tile = next_tile;
             if current_tile.pipe == Pipe::Start {
                 if next_dir.is_vertical() {
-                    self.get_tile_mut(current_tile.x, current_tile.y).unwrap().loop_dir = Some(*next_dir);
+                    self.get_tile_mut(current_tile.x, current_tile.y)
+                        .unwrap()
+                        .loop_dir = Some(*next_dir);
                 } else {
-                    self.get_tile_mut(current_tile.x, current_tile.y).unwrap().loop_dir = Some(*last_next_dir);
+                    self.get_tile_mut(current_tile.x, current_tile.y)
+                        .unwrap()
+                        .loop_dir = Some(*last_next_dir);
                 }
                 break;
             }
@@ -230,11 +258,13 @@ impl Map{
     }
 
     pub fn get_tile(&self, x: u32, y: u32) -> Option<&Tile> {
-        self.tiles.get(x as usize + y as usize * self.width as usize)
+        self.tiles
+            .get(x as usize + y as usize * self.width as usize)
     }
 
     pub fn get_tile_mut(&mut self, x: u32, y: u32) -> Option<&mut Tile> {
-        self.tiles.get_mut(x as usize + y as usize * self.width as usize)
+        self.tiles
+            .get_mut(x as usize + y as usize * self.width as usize)
     }
 }
 
@@ -243,23 +273,24 @@ mod test_day10 {
     use crate::*;
 
     #[test]
-    fn test_part1(){
-        let input = include_str!("./test.txt");
+    fn test_part1() {
+        let input = include_str!("../../aoc-2023-inputs/day-10/test.txt");
         assert_eq!(part_1(input), 4);
 
-        let input = include_str!("./test2.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-10/test2.txt");
         assert_eq!(part_1(input), 8);
     }
 
     #[test]
-    fn test_part2(){
-        let input = include_str!("./test3.txt");
+    fn test_part2() {
+        let input = include_str!("../../aoc-2023-inputs/day-10/test3.txt");
         assert_eq!(part_2(input), 4);
 
-        let input = include_str!("./test4.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-10/test4.txt");
         assert_eq!(part_2(input), 8);
 
-        let input = include_str!("./test5.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-10/test5.txt");
         assert_eq!(part_2(input), 10);
     }
 }
+

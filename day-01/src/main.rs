@@ -1,7 +1,7 @@
 pub mod search_tree;
 
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-01/input.txt");
     dbg!(part_1(input));
     dbg!(part_2(input));
 }
@@ -35,8 +35,8 @@ fn calib_value(hash: &str) -> u32 {
             last_digit = char;
         }
     }
-    first_digit.to_digit(10).unwrap()*10 + last_digit.to_digit(10).unwrap()
-}  
+    first_digit.to_digit(10).unwrap() * 10 + last_digit.to_digit(10).unwrap()
+}
 
 fn calib_value_imprv(hash: &str) -> u32 {
     let mut first_digit: u32 = 0;
@@ -44,8 +44,10 @@ fn calib_value_imprv(hash: &str) -> u32 {
 
     let mut last_digit: u32 = 0;
     let mut last_digit_index: i32 = -1;
-    
-    let numbers = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+
+    let numbers = [
+        "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    ];
     for (num_index, number) in numbers.iter().enumerate() {
         for (i, _) in hash.match_indices(number) {
             let i_unwrap = i.try_into().unwrap();
@@ -57,7 +59,7 @@ fn calib_value_imprv(hash: &str) -> u32 {
             if i_unwrap > last_digit_index {
                 last_digit = num_index_unwrap + 1;
                 last_digit_index = i_unwrap;
-            } 
+            }
         }
     }
 
@@ -71,11 +73,11 @@ fn calib_value_imprv(hash: &str) -> u32 {
             if i_unwrap > last_digit_index {
                 last_digit = char.to_digit(10).unwrap();
                 last_digit_index = i_unwrap;
-            } 
+            }
         }
     }
 
-    first_digit*10 + last_digit
+    first_digit * 10 + last_digit
 }
 
 #[cfg(test)]
@@ -109,7 +111,7 @@ mod tests_day01 {
         tree.insert_string_on_root("one", 1);
         tree.insert_string_on_root("two", 2);
         tree.insert_string_on_root("three", 3);
-        
+
         assert_eq!(tree.match_string_from_root("n").length, 0);
         assert_eq!(tree.match_string_from_root("on").length, 2);
         assert_eq!(tree.match_string_from_root("one").length, 3);

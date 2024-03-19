@@ -1,20 +1,32 @@
+use num_integer::lcm;
+use regex::Regex;
+use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
-use std::cell::RefCell;
-use regex::Regex;
-use num_integer::lcm;
 
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-20/input.txt");
     dbg!(part_1(input));
     dbg!(part_2(input));
 }
 
 fn part_1(input: &str) -> u64 {
     let re = Regex::new(r"([%&])?([a-z]+)\s->(.*)").unwrap();
-    let mut inputs = re.captures_iter(input).map(|cap| {
-        (cap.get(1), cap.get(2).unwrap().as_str(), cap.get(3).unwrap().as_str().split(",").map(|s| s.trim()).collect::<Vec<_>>())
-    }).collect::<Vec<_>>();
+    let mut inputs = re
+        .captures_iter(input)
+        .map(|cap| {
+            (
+                cap.get(1),
+                cap.get(2).unwrap().as_str(),
+                cap.get(3)
+                    .unwrap()
+                    .as_str()
+                    .split(",")
+                    .map(|s| s.trim())
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect::<Vec<_>>();
     let mut inputs_name = inputs.iter().map(|(_, name, _)| name).collect::<Vec<_>>();
     //Add inputs with no outputs
     let mut inputs_with_no_outputs: Vec<_> = Vec::new();
@@ -28,45 +40,69 @@ fn part_1(input: &str) -> u64 {
     }
     inputs.extend(inputs_with_no_outputs);
     //Replace all references by name to references by index in the inputs array
-    let inputs_with_index = inputs.iter().map(|(a, b, ref_)| {
-        (a, b, ref_.iter().map(|r| {
-            
-            inputs.iter().position(|(_, name, _)| name == r).unwrap() as u64
-        }).collect::<Vec<_>>())
-    }).collect::<Vec<_>>();
+    let inputs_with_index = inputs
+        .iter()
+        .map(|(a, b, ref_)| {
+            (
+                a,
+                b,
+                ref_.iter()
+                    .map(|r| inputs.iter().position(|(_, name, _)| name == r).unwrap() as u64)
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect::<Vec<_>>();
 
     let mut modules: HashMap<&str, Rc<RefCell<Module>>> = HashMap::new();
     for (type_char, name, _) in inputs_with_index.iter() {
-        modules.insert(name, if type_char.is_some() {
+        modules.insert(
+            name,
+            if type_char.is_some() {
                 match type_char.unwrap().as_str() {
-                    "&" => Rc::new(RefCell::new(Module::Conjunction(Rc::new(RefCell::new(Conjunction {
-                        name,
-                        inputs: vec![],
-                        last_pulse: vec![],
-                        outputs: vec![],
-                    }))))),
-                    "%" => Rc::new(RefCell::new(Module::FlipFlop(Rc::new(RefCell::new(FlipFlop {
-                        name,
-                        outputs: vec![],
-                        state: false,
-                    }))))),
+                    "&" => Rc::new(RefCell::new(Module::Conjunction(Rc::new(RefCell::new(
+                        Conjunction {
+                            name,
+                            inputs: vec![],
+                            last_pulse: vec![],
+                            outputs: vec![],
+                        },
+                    ))))),
+                    "%" => Rc::new(RefCell::new(Module::FlipFlop(Rc::new(RefCell::new(
+                        FlipFlop {
+                            name,
+                            outputs: vec![],
+                            state: false,
+                        },
+                    ))))),
                     _ => panic!("Unknown type char"),
                 }
-            } else { 
-                Rc::new(RefCell::new(Module::Broadcast(Rc::new(RefCell::new(Broadcast { name, outputs: vec![] })))))
-            }
+            } else {
+                Rc::new(RefCell::new(Module::Broadcast(Rc::new(RefCell::new(
+                    Broadcast {
+                        name,
+                        outputs: vec![],
+                    },
+                )))))
+            },
         );
     }
     //Create ref between modules
     for (_, name, outputs_index) in inputs_with_index.iter() {
-        let ouputs = outputs_index.iter().map(|index| Rc::clone(&modules[inputs_with_index[*index as usize].1])).collect::<Vec<_>>();
+        let ouputs = outputs_index
+            .iter()
+            .map(|index| Rc::clone(&modules[inputs_with_index[*index as usize].1]))
+            .collect::<Vec<_>>();
         Module::add_outputs(&modules[*name], ouputs);
     }
 
     let mut signals: VecDeque<Signal> = VecDeque::new();
     let mut signals_sum = (0, 0);
     for _ in 0..1000 {
-        signals.push_back(Signal { from: Rc::clone(&modules["broadcaster"]), to: Rc::clone(&modules["broadcaster"]), value: false });
+        signals.push_back(Signal {
+            from: Rc::clone(&modules["broadcaster"]),
+            to: Rc::clone(&modules["broadcaster"]),
+            value: false,
+        });
         while let Some(signal) = signals.pop_front() {
             if !signal.value {
                 signals_sum.0 += 1;
@@ -77,14 +113,26 @@ fn part_1(input: &str) -> u64 {
             signals.extend(new_signals);
         }
     }
-    signals_sum.0*signals_sum.1
+    signals_sum.0 * signals_sum.1
 }
 
 fn part_2(input: &str) -> u64 {
     let re = Regex::new(r"([%&])?([a-z]+)\s->(.*)").unwrap();
-    let mut inputs = re.captures_iter(input).map(|cap| {
-        (cap.get(1), cap.get(2).unwrap().as_str(), cap.get(3).unwrap().as_str().split(",").map(|s| s.trim()).collect::<Vec<_>>())
-    }).collect::<Vec<_>>();
+    let mut inputs = re
+        .captures_iter(input)
+        .map(|cap| {
+            (
+                cap.get(1),
+                cap.get(2).unwrap().as_str(),
+                cap.get(3)
+                    .unwrap()
+                    .as_str()
+                    .split(",")
+                    .map(|s| s.trim())
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect::<Vec<_>>();
     let mut inputs_name = inputs.iter().map(|(_, name, _)| name).collect::<Vec<_>>();
     //Add inputs with no outputs
     let mut inputs_with_no_outputs: Vec<_> = Vec::new();
@@ -98,48 +146,72 @@ fn part_2(input: &str) -> u64 {
     }
     inputs.extend(inputs_with_no_outputs);
     //Replace all references by name to references by index in the inputs array
-    let inputs_with_index = inputs.iter().map(|(a, b, ref_)| {
-        (a, b, ref_.iter().map(|r| {
-            
-            inputs.iter().position(|(_, name, _)| name == r).unwrap() as u64
-        }).collect::<Vec<_>>())
-    }).collect::<Vec<_>>();
+    let inputs_with_index = inputs
+        .iter()
+        .map(|(a, b, ref_)| {
+            (
+                a,
+                b,
+                ref_.iter()
+                    .map(|r| inputs.iter().position(|(_, name, _)| name == r).unwrap() as u64)
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect::<Vec<_>>();
 
     let mut modules: HashMap<&str, Rc<RefCell<Module>>> = HashMap::new();
     for (type_char, name, _) in inputs_with_index.iter() {
-        modules.insert(name, if type_char.is_some() {
+        modules.insert(
+            name,
+            if type_char.is_some() {
                 match type_char.unwrap().as_str() {
-                    "&" => Rc::new(RefCell::new(Module::Conjunction(Rc::new(RefCell::new(Conjunction {
-                        name,
-                        inputs: vec![],
-                        last_pulse: vec![],
-                        outputs: vec![],
-                    }))))),
-                    "%" => Rc::new(RefCell::new(Module::FlipFlop(Rc::new(RefCell::new(FlipFlop {
-                        name,
-                        outputs: vec![],
-                        state: false,
-                    }))))),
+                    "&" => Rc::new(RefCell::new(Module::Conjunction(Rc::new(RefCell::new(
+                        Conjunction {
+                            name,
+                            inputs: vec![],
+                            last_pulse: vec![],
+                            outputs: vec![],
+                        },
+                    ))))),
+                    "%" => Rc::new(RefCell::new(Module::FlipFlop(Rc::new(RefCell::new(
+                        FlipFlop {
+                            name,
+                            outputs: vec![],
+                            state: false,
+                        },
+                    ))))),
                     _ => panic!("Unknown type char"),
                 }
-            } else { 
-                Rc::new(RefCell::new(Module::Broadcast(Rc::new(RefCell::new(Broadcast { name, outputs: vec![] })))))
-            }
+            } else {
+                Rc::new(RefCell::new(Module::Broadcast(Rc::new(RefCell::new(
+                    Broadcast {
+                        name,
+                        outputs: vec![],
+                    },
+                )))))
+            },
         );
     }
     //Create ref between modules
     for (_, name, outputs_index) in inputs_with_index.iter() {
-        let ouputs = outputs_index.iter().map(|index| Rc::clone(&modules[inputs_with_index[*index as usize].1])).collect::<Vec<_>>();
+        let ouputs = outputs_index
+            .iter()
+            .map(|index| Rc::clone(&modules[inputs_with_index[*index as usize].1]))
+            .collect::<Vec<_>>();
         Module::add_outputs(&modules[*name], ouputs);
     }
 
     let mut signals: VecDeque<Signal> = VecDeque::new();
     let mut push_counter = 0;
-    let mut cycle_counter: [u64; 4] = [0;4];
+    let mut cycle_counter: [u64; 4] = [0; 4];
     //rx is wired to only four conjunctions modules with inverters so we can find the cycle by finding the lcm of the cycle of each conjunction (jj, gf, xz and bz)
     'outer: loop {
         push_counter += 1;
-        signals.push_back(Signal { from: Rc::clone(&modules["broadcaster"]), to: Rc::clone(&modules["broadcaster"]), value: false });
+        signals.push_back(Signal {
+            from: Rc::clone(&modules["broadcaster"]),
+            to: Rc::clone(&modules["broadcaster"]),
+            value: false,
+        });
         while let Some(signal) = signals.pop_front() {
             if Module::get_name(&signal.from) == "jj" && !signal.value {
                 cycle_counter[0] = push_counter;
@@ -157,28 +229,31 @@ fn part_2(input: &str) -> u64 {
             signals.extend(new_signals);
         }
     }
-    lcm(lcm(cycle_counter[0], cycle_counter[1]), lcm(cycle_counter[2], cycle_counter[3]))
+    lcm(
+        lcm(cycle_counter[0], cycle_counter[1]),
+        lcm(cycle_counter[2], cycle_counter[3]),
+    )
 }
 
 #[derive(PartialEq, Clone)]
 struct FlipFlop<'a> {
     name: &'a str,
-    outputs: Vec<Rc<RefCell<Module<'a>>>>, 
+    outputs: Vec<Rc<RefCell<Module<'a>>>>,
     state: bool,
 }
 
 #[derive(PartialEq, Clone)]
 struct Conjunction<'a> {
     name: &'a str,
-    inputs: Vec<Rc<RefCell<Module<'a>>>>, 
+    inputs: Vec<Rc<RefCell<Module<'a>>>>,
     last_pulse: Vec<bool>,
-    outputs: Vec<Rc<RefCell<Module<'a>>>>, 
+    outputs: Vec<Rc<RefCell<Module<'a>>>>,
 }
 
 #[derive(PartialEq, Clone)]
-struct Broadcast<'a> {  
+struct Broadcast<'a> {
     name: &'a str,
-    outputs: Vec<Rc<RefCell<Module<'a>>>>, 
+    outputs: Vec<Rc<RefCell<Module<'a>>>>,
 }
 
 struct Signal<'a> {
@@ -200,15 +275,24 @@ impl<'a> Module<'a> {
         match &*self_.borrow() {
             Module::Broadcast(broadcast) => {
                 let broadcast = broadcast.borrow();
-                broadcast.outputs.iter().map(|output| Signal {
-                    from: Rc::clone(self_),
-                    to: Rc::clone(output),
-                    value: signal.value,
-                }).collect()
-            },
+                broadcast
+                    .outputs
+                    .iter()
+                    .map(|output| Signal {
+                        from: Rc::clone(self_),
+                        to: Rc::clone(output),
+                        value: signal.value,
+                    })
+                    .collect()
+            }
             Module::Conjunction(conjunction) => {
                 {
-                    let index_of_input_signal = conjunction.borrow().inputs.iter().position(|input| Module::names_eq(input, &signal.from)).unwrap();
+                    let index_of_input_signal = conjunction
+                        .borrow()
+                        .inputs
+                        .iter()
+                        .position(|input| Module::names_eq(input, &signal.from))
+                        .unwrap();
                     let mut conjunction = conjunction.borrow_mut();
                     if conjunction.inputs.len() != conjunction.last_pulse.len() {
                         conjunction.last_pulse = vec![false; conjunction.inputs.len()];
@@ -216,12 +300,17 @@ impl<'a> Module<'a> {
                     conjunction.last_pulse[index_of_input_signal] = signal.value;
                 }
 
-                conjunction.borrow().outputs.iter().map(|output| Signal {
-                    from: Rc::clone(self_),
-                    to: Rc::clone(output),
-                    value: !conjunction.borrow().last_pulse.iter().all(|pulse| *pulse),
-                }).collect()
-            },
+                conjunction
+                    .borrow()
+                    .outputs
+                    .iter()
+                    .map(|output| Signal {
+                        from: Rc::clone(self_),
+                        to: Rc::clone(output),
+                        value: !conjunction.borrow().last_pulse.iter().all(|pulse| *pulse),
+                    })
+                    .collect()
+            }
             Module::FlipFlop(flip_flop) => {
                 if !signal.value {
                     {
@@ -229,22 +318,33 @@ impl<'a> Module<'a> {
                         flip_flop.state = !flip_flop.state;
                     }
 
-                    flip_flop.borrow().outputs.iter().map(|output| Signal {
-                        from: Rc::clone(self_),
-                        to: Rc::clone(output),
-                        value: flip_flop.borrow().state,
-                    }).collect()
+                    flip_flop
+                        .borrow()
+                        .outputs
+                        .iter()
+                        .map(|output| Signal {
+                            from: Rc::clone(self_),
+                            to: Rc::clone(output),
+                            value: flip_flop.borrow().state,
+                        })
+                        .collect()
                 } else {
                     vec![]
                 }
-            },
+            }
         }
     }
     pub fn names_eq(self_: &Rc<RefCell<Module<'a>>>, other: &Rc<RefCell<Module<'a>>>) -> bool {
         match (&*self_.borrow(), &*other.borrow()) {
-            (Module::Broadcast(broadcast), Module::Broadcast(other_broadcast)) => broadcast.borrow().name == other_broadcast.borrow().name,
-            (Module::Conjunction(conjunction), Module::Conjunction(other_conjunction)) => conjunction.borrow().name == other_conjunction.borrow().name,
-            (Module::FlipFlop(flip_flop), Module::FlipFlop(other_flip_flop)) => flip_flop.borrow().name == other_flip_flop.borrow().name,
+            (Module::Broadcast(broadcast), Module::Broadcast(other_broadcast)) => {
+                broadcast.borrow().name == other_broadcast.borrow().name
+            }
+            (Module::Conjunction(conjunction), Module::Conjunction(other_conjunction)) => {
+                conjunction.borrow().name == other_conjunction.borrow().name
+            }
+            (Module::FlipFlop(flip_flop), Module::FlipFlop(other_flip_flop)) => {
+                flip_flop.borrow().name == other_flip_flop.borrow().name
+            }
             _ => false,
         }
     }
@@ -261,8 +361,8 @@ impl<'a> Module<'a> {
                 let mut conjunction = conjunction.borrow_mut();
                 conjunction.inputs.push(Rc::clone(input));
                 conjunction.last_pulse.push(false);
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
     pub fn add_outputs(self_: &Rc<RefCell<Module<'a>>>, outputs: Vec<Rc<RefCell<Module<'a>>>>) {
@@ -273,21 +373,21 @@ impl<'a> Module<'a> {
                     Module::add_input(output, self_);
                 }
                 broadcast.outputs = outputs;
-            },
+            }
             Module::Conjunction(conjunction) => {
                 let mut conjunction = conjunction.borrow_mut();
                 for output in outputs.iter() {
                     Module::add_input(output, self_);
                 }
                 conjunction.outputs = outputs;
-            },
+            }
             Module::FlipFlop(flip_flop) => {
                 let mut flip_flop = flip_flop.borrow_mut();
                 for output in outputs.iter() {
                     Module::add_input(output, self_);
                 }
                 flip_flop.outputs = outputs;
-            },
+            }
         }
     }
 }
@@ -298,10 +398,10 @@ mod tests_day20 {
 
     #[test]
     fn test_part_1() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-20/test.txt");
         assert_eq!(part_1(input), 32000000);
 
-        let input = include_str!("./test2.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-20/test2.txt");
         assert_eq!(part_1(input), 11687500);
     }
 }

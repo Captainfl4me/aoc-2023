@@ -1,9 +1,9 @@
-use std::collections::HashMap;
 use num::integer::lcm;
 use regex::Regex;
+use std::collections::HashMap;
 
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-08/input.txt");
     dbg!(part_1(input));
     dbg!(part_2(input));
 }
@@ -50,7 +50,11 @@ fn part_2(input: &str) -> u64 {
         map.insert(point_names[0], direction);
     }
 
-    let starting_points: Vec<&str> = map.keys().filter(|k| (**k).ends_with("A")).map(|a| *a).collect();
+    let starting_points: Vec<&str> = map
+        .keys()
+        .filter(|k| (**k).ends_with("A"))
+        .map(|a| *a)
+        .collect();
     let mut cycle_length: Vec<u64> = Vec::new();
     for start_point in starting_points.iter() {
         let mut current_point = *start_point;
@@ -69,9 +73,9 @@ fn part_2(input: &str) -> u64 {
                 break;
             }
         }
-        cycle_length.push(count_iter); 
+        cycle_length.push(count_iter);
     }
-    cycle_length.into_iter().reduce(|a,b| lcm(a,b)).unwrap()
+    cycle_length.into_iter().reduce(|a, b| lcm(a, b)).unwrap()
 }
 
 struct Direction {
@@ -87,22 +91,23 @@ impl Direction {
 #[cfg(test)]
 mod tests_day08 {
     use super::*;
-    
+
     #[test]
-    fn test_part1(){
-        let input = include_str!("./test.txt");
+    fn test_part1() {
+        let input = include_str!("../../aoc-2023-inputs/day-08/test.txt");
         assert_eq!(part_1(input), 6);
     }
-    
+
     #[test]
-    fn test2_part1(){
-        let input = include_str!("./test2.txt");
+    fn test2_part1() {
+        let input = include_str!("../../aoc-2023-inputs/day-08/test2.txt");
         assert_eq!(part_1(input), 2);
     }
-    
+
     #[test]
-    fn test_part2(){
-        let input = include_str!("./test3.txt");
+    fn test_part2() {
+        let input = include_str!("../../aoc-2023-inputs/day-08/test3.txt");
         assert_eq!(part_2(input), 6);
     }
 }
+

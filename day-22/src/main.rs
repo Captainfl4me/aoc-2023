@@ -2,7 +2,7 @@ use std::cmp::min;
 
 fn main() {
     let now = std::time::Instant::now();
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-22/input.txt");
 
     let mut bricks = parse_bricks(input);
     let _ = apply_gravity_bricks(&mut bricks);
@@ -195,7 +195,7 @@ mod tests_day22 {
 
     #[test]
     fn test_part_1() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-22/test.txt");
 
         let mut bricks = parse_bricks(input);
         apply_gravity_bricks(&mut bricks);
@@ -205,7 +205,7 @@ mod tests_day22 {
 
     #[test]
     fn test_part_2() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-22/test.txt");
 
         let mut bricks = parse_bricks(input);
         apply_gravity_bricks(&mut bricks);

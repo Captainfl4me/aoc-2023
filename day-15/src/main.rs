@@ -1,5 +1,5 @@
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-15/input.txt");
     dbg!(part_1(input));
     dbg!(part_2(input));
 }
@@ -10,7 +10,9 @@ fn part_1(input: &str) -> u64 {
 
 fn part_2(input: &str) -> u64 {
     let mut box_: Vec<Box> = Vec::with_capacity(256);
-    for _ in 0..256 { box_.push(Box::new()); }
+    for _ in 0..256 {
+        box_.push(Box::new());
+    }
 
     for s in input.split(',') {
         if s.contains('-') {
@@ -26,11 +28,16 @@ fn part_2(input: &str) -> u64 {
         }
     }
 
-    box_.iter().enumerate().map(|(i, b)| {
-        b.lenses.iter().enumerate().map(|(j, l)| {
-            (i + 1) * (j + 1) * l.focal_length as usize
-        }).sum::<usize>()
-    }).sum::<usize>() as u64
+    box_.iter()
+        .enumerate()
+        .map(|(i, b)| {
+            b.lenses
+                .iter()
+                .enumerate()
+                .map(|(j, l)| (i + 1) * (j + 1) * l.focal_length as usize)
+                .sum::<usize>()
+        })
+        .sum::<usize>() as u64
 }
 
 fn hash(input: &str) -> u64 {
@@ -65,7 +72,11 @@ impl Box {
         Self { lenses: vec![] }
     }
     fn add_lens(&mut self, lens: Lens) {
-        let lens_with_label = self.lenses.iter_mut().filter(|l| l.label == lens.label).next();
+        let lens_with_label = self
+            .lenses
+            .iter_mut()
+            .filter(|l| l.label == lens.label)
+            .next();
         if lens_with_label.is_some() {
             lens_with_label.unwrap().focal_length = lens.focal_length;
         } else {
@@ -89,13 +100,13 @@ mod tests_day15 {
 
     #[test]
     fn test_part_1() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-15/test.txt");
         assert_eq!(part_1(input), 1320);
     }
 
     #[test]
     fn test_part_2() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-15/test.txt");
         assert_eq!(part_2(input), 145);
     }
 }

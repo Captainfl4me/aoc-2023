@@ -1,7 +1,9 @@
 fn main() {
     let input = include_str!("./input.txt");
+    let now = std::time::Instant::now();
     dbg!(part_1(input));
     dbg!(part_2(input));
+    println!("Time: {:?}", now.elapsed());
 }
 
 fn part_1(input: &str) -> u64 {

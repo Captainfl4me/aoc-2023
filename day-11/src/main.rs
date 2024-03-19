@@ -1,5 +1,5 @@
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-11/input.txt");
     dbg!(part_1(input));
     dbg!(part_2(input, 1000000));
 }
@@ -49,7 +49,7 @@ impl Galaxy {
         match c {
             '.' => Self::Empty,
             '#' => Self::Galaxy,
-            _ => panic!("Invalid galaxy")
+            _ => panic!("Invalid galaxy"),
         }
     }
 }
@@ -60,7 +60,8 @@ struct Map {
 }
 impl Map {
     pub fn new(input: &str) -> Self {
-        let map: Vec<Vec<Galaxy>> = input.lines()
+        let map: Vec<Vec<Galaxy>> = input
+            .lines()
             .map(|line| line.chars().map(|c| Galaxy::new(c)).collect())
             .collect();
         let width = map[0].len();
@@ -89,10 +90,7 @@ impl Map {
 
     pub fn replace_expansion(&mut self) {
         let empty_lines = self.detect_empty_line();
-        let empty_lines = empty_lines
-            .iter()
-            .enumerate()
-            .map(|(i, y)| (i, y + i));
+        let empty_lines = empty_lines.iter().enumerate().map(|(i, y)| (i, y + i));
 
         for (_, index) in empty_lines {
             self.map.insert(index, vec![Galaxy::Empty; self.width]);
@@ -100,10 +98,7 @@ impl Map {
         self.height = self.map.len();
 
         let empty_columns = self.detect_empty_column();
-        let empty_columns = empty_columns
-            .iter()
-            .enumerate()
-            .map(|(i, x)| (i, x + i));
+        let empty_columns = empty_columns.iter().enumerate().map(|(i, x)| (i, x + i));
 
         for (_, index) in empty_columns {
             for line in self.map.iter_mut() {
@@ -123,7 +118,7 @@ impl Map {
         }
         galaxies
     }
-    
+
     pub fn find_all_galaxy_with_big_expansion(&self, expansion: u32) -> Vec<(usize, usize)> {
         let expansion = expansion - 1;
         let empty_lines = self.detect_empty_line();
@@ -158,23 +153,24 @@ mod test_day11 {
     use crate::*;
 
     #[test]
-    fn test_emptylines(){
-        let input = include_str!("./test.txt");
+    fn test_emptylines() {
+        let input = include_str!("../../aoc-2023-inputs/day-11/test.txt");
         let map = Map::new(input);
         assert_eq!(map.detect_empty_line(), vec![3, 7]);
         assert_eq!(map.detect_empty_column(), vec![2, 5, 8]);
     }
 
     #[test]
-    fn test_part1(){
-        let input = include_str!("./test.txt");
+    fn test_part1() {
+        let input = include_str!("../../aoc-2023-inputs/day-11/test.txt");
         assert_eq!(part_1(input), 374);
     }
-    
+
     #[test]
-    fn test_part2(){
-        let input = include_str!("./test.txt");
+    fn test_part2() {
+        let input = include_str!("../../aoc-2023-inputs/day-11/test.txt");
         assert_eq!(part_2(input, 10), 1030);
         assert_eq!(part_2(input, 100), 8410);
     }
 }
+

@@ -1,7 +1,7 @@
 use polyfit_rs::polyfit_rs::polyfit;
 
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-21/input.txt");
     dbg!(part_1(input, 64));
     dbg!(part_2(input, 26501365, 0));
 }
@@ -10,8 +10,8 @@ fn part_1(input: &str, step_count: u64) -> u64 {
     let line_width = input.lines().count() as i64;
     let map: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
     let start_pos = Position {
-        x: (line_width-1)/2, 
-        y: (line_width-1)/2
+        x: (line_width - 1) / 2,
+        y: (line_width - 1) / 2,
     };
     assert_eq!(map[start_pos.y as usize][start_pos.x as usize], 'S');
 
@@ -23,42 +23,69 @@ fn part_1(input: &str, step_count: u64) -> u64 {
         let mut next_states: Vec<State> = vec![];
         for state in states.iter() {
             let mut neighbour_states = vec![];
-            let left_tile = Position { x: (state.position.x - 1).rem_euclid(line_width), y: state.position.y.rem_euclid(line_width) };
-            let right_tile = Position { x: (state.position.x + 1).rem_euclid(line_width), y: state.position.y.rem_euclid(line_width) };
-            let up_tile = Position { x: state.position.x.rem_euclid(line_width), y: (state.position.y - 1).rem_euclid(line_width) };
-            let down_tile = Position { x: state.position.x.rem_euclid(line_width), y: (state.position.y + 1).rem_euclid(line_width) };
+            let left_tile = Position {
+                x: (state.position.x - 1).rem_euclid(line_width),
+                y: state.position.y.rem_euclid(line_width),
+            };
+            let right_tile = Position {
+                x: (state.position.x + 1).rem_euclid(line_width),
+                y: state.position.y.rem_euclid(line_width),
+            };
+            let up_tile = Position {
+                x: state.position.x.rem_euclid(line_width),
+                y: (state.position.y - 1).rem_euclid(line_width),
+            };
+            let down_tile = Position {
+                x: state.position.x.rem_euclid(line_width),
+                y: (state.position.y + 1).rem_euclid(line_width),
+            };
 
             // Go left
             if map[left_tile.y as usize][left_tile.x as usize] != '#' {
                 neighbour_states.push(State {
-                    position: Position { x: state.position.x - 1, y: state.position.y },
+                    position: Position {
+                        x: state.position.x - 1,
+                        y: state.position.y,
+                    },
                     step: state.step + 1,
                 });
             }
             // Go right
             if map[right_tile.y as usize][right_tile.x as usize] != '#' {
                 neighbour_states.push(State {
-                    position: Position { x: state.position.x + 1, y: state.position.y },
+                    position: Position {
+                        x: state.position.x + 1,
+                        y: state.position.y,
+                    },
                     step: state.step + 1,
                 });
             }
             // Go up
             if map[up_tile.y as usize][up_tile.x as usize] != '#' {
                 neighbour_states.push(State {
-                    position: Position { x: state.position.x, y: state.position.y - 1 },
+                    position: Position {
+                        x: state.position.x,
+                        y: state.position.y - 1,
+                    },
                     step: state.step + 1,
                 });
             }
             // Go down
             if map[down_tile.y as usize][down_tile.x as usize] != '#' {
                 neighbour_states.push(State {
-                    position: Position { x: state.position.x, y: state.position.y + 1 },
+                    position: Position {
+                        x: state.position.x,
+                        y: state.position.y + 1,
+                    },
                     step: state.step + 1,
                 });
             }
 
             for next_state in neighbour_states.iter() {
-                if !next_states.iter().any(|s| s.position == next_state.position) {
+                if !next_states
+                    .iter()
+                    .any(|s| s.position == next_state.position)
+                {
                     next_states.push(*next_state);
                 }
             }
@@ -83,21 +110,24 @@ struct Position {
 fn part_2(input: &str, step_count: u64, offset: u64) -> u64 {
     let map_size = input.lines().count() as u64;
 
-    if step_count < (2+offset)*map_size {
+    if step_count < (2 + offset) * map_size {
         return part_1(input, step_count);
     }
 
     let remainder = step_count % map_size;
     let xs: Vec<f64> = vec![offset as f64, (offset + 1) as f64, (offset + 2) as f64];
-    let x = ((step_count - (map_size-1)/2) / map_size) as i64;
-    let step_to_take: Vec<u64> = xs.iter().map(|x| map_size*(*x as u64)+remainder).collect();
+    let x = ((step_count - (map_size - 1) / 2) / map_size) as i64;
+    let step_to_take: Vec<u64> = xs
+        .iter()
+        .map(|x| map_size * (*x as u64) + remainder)
+        .collect();
     let mut ys: Vec<f64> = vec![];
-    
+
     let line_width = input.lines().count() as i64;
     let map: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
     let start_pos = Position {
-        x: (line_width-1)/2, 
-        y: (line_width-1)/2
+        x: (line_width - 1) / 2,
+        y: (line_width - 1) / 2,
     };
     assert_eq!(map[start_pos.y as usize][start_pos.x as usize], 'S');
 
@@ -109,42 +139,69 @@ fn part_2(input: &str, step_count: u64, offset: u64) -> u64 {
         let mut next_states: Vec<State> = vec![];
         for state in states.iter() {
             let mut neighbour_states = vec![];
-            let left_tile = Position { x: (state.position.x - 1).rem_euclid(line_width), y: state.position.y.rem_euclid(line_width) };
-            let right_tile = Position { x: (state.position.x + 1).rem_euclid(line_width), y: state.position.y.rem_euclid(line_width) };
-            let up_tile = Position { x: state.position.x.rem_euclid(line_width), y: (state.position.y - 1).rem_euclid(line_width) };
-            let down_tile = Position { x: state.position.x.rem_euclid(line_width), y: (state.position.y + 1).rem_euclid(line_width) };
+            let left_tile = Position {
+                x: (state.position.x - 1).rem_euclid(line_width),
+                y: state.position.y.rem_euclid(line_width),
+            };
+            let right_tile = Position {
+                x: (state.position.x + 1).rem_euclid(line_width),
+                y: state.position.y.rem_euclid(line_width),
+            };
+            let up_tile = Position {
+                x: state.position.x.rem_euclid(line_width),
+                y: (state.position.y - 1).rem_euclid(line_width),
+            };
+            let down_tile = Position {
+                x: state.position.x.rem_euclid(line_width),
+                y: (state.position.y + 1).rem_euclid(line_width),
+            };
 
             // Go left
             if map[left_tile.y as usize][left_tile.x as usize] != '#' {
                 neighbour_states.push(State {
-                    position: Position { x: state.position.x - 1, y: state.position.y },
+                    position: Position {
+                        x: state.position.x - 1,
+                        y: state.position.y,
+                    },
                     step: state.step + 1,
                 });
             }
             // Go right
             if map[right_tile.y as usize][right_tile.x as usize] != '#' {
                 neighbour_states.push(State {
-                    position: Position { x: state.position.x + 1, y: state.position.y },
+                    position: Position {
+                        x: state.position.x + 1,
+                        y: state.position.y,
+                    },
                     step: state.step + 1,
                 });
             }
             // Go up
             if map[up_tile.y as usize][up_tile.x as usize] != '#' {
                 neighbour_states.push(State {
-                    position: Position { x: state.position.x, y: state.position.y - 1 },
+                    position: Position {
+                        x: state.position.x,
+                        y: state.position.y - 1,
+                    },
                     step: state.step + 1,
                 });
             }
             // Go down
             if map[down_tile.y as usize][down_tile.x as usize] != '#' {
                 neighbour_states.push(State {
-                    position: Position { x: state.position.x, y: state.position.y + 1 },
+                    position: Position {
+                        x: state.position.x,
+                        y: state.position.y + 1,
+                    },
                     step: state.step + 1,
                 });
             }
 
             for next_state in neighbour_states.iter() {
-                if !next_states.iter().any(|s| s.position == next_state.position) {
+                if !next_states
+                    .iter()
+                    .any(|s| s.position == next_state.position)
+                {
                     next_states.push(*next_state);
                 }
             }
@@ -168,13 +225,13 @@ mod tests_day21 {
 
     #[test]
     fn test_part_1() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-21/test.txt");
         assert_eq!(part_1(input, 6), 16);
     }
 
     #[test]
     fn test_part_2() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-21/test.txt");
         assert_eq!(part_2(input, 6, 5), 16);
         assert_eq!(part_2(input, 10, 5), 50);
         assert_eq!(part_2(input, 50, 5), 1594);

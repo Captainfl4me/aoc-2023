@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-23/input.txt");
     let now = std::time::Instant::now();
     dbg!(part_1(input));
     println!("Time: {:?}", now.elapsed());
@@ -65,14 +65,15 @@ impl State {
         already_visited.push(last_state.position);
         Self {
             position,
-            distance: last_state.distance + (*vec![
-                position.0.abs_diff(last_state.position.0),
-                position.1.abs_diff(last_state.position.1),
-            ]
-            .iter()
-            .max()
-            .unwrap_or(&0)) as u64,
-            already_visited
+            distance: last_state.distance
+                + (*vec![
+                    position.0.abs_diff(last_state.position.0),
+                    position.1.abs_diff(last_state.position.1),
+                ]
+                .iter()
+                .max()
+                .unwrap_or(&0)) as u64,
+            already_visited,
         }
     }
 }
@@ -138,16 +139,16 @@ impl Map {
                             if direction == dir {
                                 match direction {
                                     Direction::North => {
-                                        states.push(State::new_from_state((x-1, y), &state))
+                                        states.push(State::new_from_state((x - 1, y), &state))
                                     }
                                     Direction::South => {
-                                        states.push(State::new_from_state((x+1, y), &state))
+                                        states.push(State::new_from_state((x + 1, y), &state))
                                     }
                                     Direction::West => {
-                                        states.push(State::new_from_state((x, y-1), &state))
+                                        states.push(State::new_from_state((x, y - 1), &state))
                                     }
                                     Direction::East => {
-                                        states.push(State::new_from_state((x, y+1), &state))
+                                        states.push(State::new_from_state((x, y + 1), &state))
                                     }
                                 }
                             }
@@ -186,9 +187,7 @@ impl Map {
             }
         }
 
-        *dist.iter()
-            .max()
-            .unwrap_or(&0) - 1
+        *dist.iter().max().unwrap_or(&0) - 1
     }
 }
 
@@ -207,7 +206,7 @@ mod tests_day23 {
 
     #[test]
     fn test_part_1() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-23/test.txt");
         assert_eq!(part_1(input), 94);
     }
 

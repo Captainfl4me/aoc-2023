@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-14/input.txt");
     dbg!(part_1(input));
     dbg!(part_2(input, 1000000000));
 }
@@ -9,10 +9,11 @@ fn main() {
 fn part_1(input: &str) -> u64 {
     let mut map: Vec<Vec<char>> = input.lines().map(|l| l.chars().collect()).collect();
     map = tilt_map_north(map);
-    
-    map.iter().enumerate().map(|(i, row)| {
-        row.iter().filter(|c| **c=='O').count() as u64 * (map.len() - i) as u64
-    }).sum::<u64>()
+
+    map.iter()
+        .enumerate()
+        .map(|(i, row)| row.iter().filter(|c| **c == 'O').count() as u64 * (map.len() - i) as u64)
+        .sum::<u64>()
 }
 
 fn part_2(input: &str, cycle: usize) -> u64 {
@@ -40,9 +41,11 @@ fn part_2(input: &str, cycle: usize) -> u64 {
     }
     let cycle_index = (cycle - start_cycle_index) % cycle_map.len();
 
-    cycle_map[cycle_index].iter().enumerate().map(|(i, row)| {
-        row.iter().filter(|c| **c=='O').count() as u64 * (map.len() - i) as u64
-    }).sum::<u64>()
+    cycle_map[cycle_index]
+        .iter()
+        .enumerate()
+        .map(|(i, row)| row.iter().filter(|c| **c == 'O').count() as u64 * (map.len() - i) as u64)
+        .sum::<u64>()
 }
 
 fn tilt_map_north(map: Vec<Vec<char>>) -> Vec<Vec<char>> {
@@ -51,12 +54,12 @@ fn tilt_map_north(map: Vec<Vec<char>>) -> Vec<Vec<char>> {
     for i in 0..map.len() {
         for j in 0..map[i].len() {
             match map[i][j] {
-                '#' => lowest_location_north[j] = i+1,
+                '#' => lowest_location_north[j] = i + 1,
                 'O' => {
                     map[i][j] = '.';
                     map[lowest_location_north[j]][j] = 'O';
                     lowest_location_north[j] += 1;
-                },
+                }
                 _ => {}
             }
         }
@@ -69,18 +72,18 @@ fn tilt_map_west(map: Vec<Vec<char>>) -> Vec<Vec<char>> {
 }
 fn tilt_map_south(map: Vec<Vec<char>>) -> Vec<Vec<char>> {
     let mut map = map;
-    let mut lowest_location_north = vec![map.len()-1; map[0].len()];
+    let mut lowest_location_north = vec![map.len() - 1; map[0].len()];
     for i in (0..map.len()).rev() {
         for j in 0..map[i].len() {
             match map[i][j] {
-                '#' => lowest_location_north[j] = if i > 0 { i-1 } else { 0 },
+                '#' => lowest_location_north[j] = if i > 0 { i - 1 } else { 0 },
                 'O' => {
                     map[i][j] = '.';
                     map[lowest_location_north[j]][j] = 'O';
                     if lowest_location_north[j] > 0 {
                         lowest_location_north[j] -= 1;
                     }
-                },
+                }
                 _ => {}
             }
         }
@@ -112,14 +115,14 @@ mod test_day14 {
 
     #[test]
     fn test_part_1() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-14/test.txt");
         let result = part_1(input);
         assert_eq!(result, 136);
     }
 
     #[test]
     fn test_part_2() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-14/test.txt");
         let result = part_2(input, 1000000000);
         assert_eq!(result, 64);
     }

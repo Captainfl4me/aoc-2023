@@ -2,7 +2,7 @@ use regex::Regex;
 
 //Shoelace formula
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-18/input.txt");
     dbg!(part_1(input));
     dbg!(part_2(input));
 }
@@ -44,8 +44,7 @@ struct Instruction {
 impl Instruction {
     pub fn from_str(s: &str) -> Vec<Self> {
         let re = Regex::new(r"([URDL])\s([0-9]+)\s\(#(.*)\)").unwrap();
-        re
-            .captures_iter(s)
+        re.captures_iter(s)
             .map(|f| f.extract())
             .map(|(_, [dir, len, _])| Instruction {
                 direction: match dir {
@@ -61,8 +60,7 @@ impl Instruction {
     }
     pub fn from_str_color_correction(s: &str) -> Vec<Self> {
         let re = Regex::new(r"([URDL])\s([0-9]+)\s\(#(.*)\)").unwrap();
-        re
-            .captures_iter(s)
+        re.captures_iter(s)
             .map(|f| f.extract())
             .map(|(_, [_, _, color])| Instruction {
                 direction: match color.chars().nth(5).unwrap() {
@@ -87,7 +85,9 @@ impl Node {
         Self { x, y }
     }
     pub fn manahttan_distance(&self, other: &Self) -> u64 {
-        ((self.x - other.x).abs() + (self.y - other.y).abs()).try_into().unwrap()
+        ((self.x - other.x).abs() + (self.y - other.y).abs())
+            .try_into()
+            .unwrap()
     }
 }
 #[derive(Debug, Clone)]
@@ -101,21 +101,24 @@ impl Map {
         let mut current_y = 0;
         for instruction in instructions.iter() {
             nodes.push(Node::new(current_x, current_y));
-            instruction.direction.step_coord(&mut current_x, &mut current_y, instruction.steps);
+            instruction
+                .direction
+                .step_coord(&mut current_x, &mut current_y, instruction.steps);
         }
         Map { nodes }
     }
 
     pub fn count_volume(&self) -> u64 {
-        let (area, perimeter) = self.nodes
-            .iter()
-            .enumerate()
-            .fold((0, 0), |(sum, perimeter), (i, node1)| {
-                let node2 = &self.nodes[(i + 1) %self.nodes.len()];
-                let new_perimeter = perimeter + node1.manahttan_distance(node2);
-                let new_sum = sum + node1.x * node2.y - node1.y * node2.x;
-                (new_sum, new_perimeter)
-            });
+        let (area, perimeter) =
+            self.nodes
+                .iter()
+                .enumerate()
+                .fold((0, 0), |(sum, perimeter), (i, node1)| {
+                    let node2 = &self.nodes[(i + 1) % self.nodes.len()];
+                    let new_perimeter = perimeter + node1.manahttan_distance(node2);
+                    let new_sum = sum + node1.x * node2.y - node1.y * node2.x;
+                    (new_sum, new_perimeter)
+                });
         ((area.abs() as u64 + perimeter) / 2) + 1
     }
 }
@@ -126,7 +129,7 @@ mod tests_day18 {
 
     #[test]
     fn test_volume_count() {
-        let input = include_str!("./test2.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-18/test.txt");
         let instr = Instruction::from_str(input);
         let map = Map::from_instructions(&instr);
         assert_eq!(map.count_volume(), 49);
@@ -134,13 +137,13 @@ mod tests_day18 {
 
     #[test]
     fn test_part_1() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-18/test.txt");
         assert_eq!(part_1(input), 62);
     }
 
     #[test]
     fn test_part_color_correction() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-18/test.txt");
         let instructions = Instruction::from_str_color_correction(input);
         assert_eq!(instructions.len(), 14);
         assert_eq!(instructions[0].direction, Direction::Right);
@@ -151,7 +154,7 @@ mod tests_day18 {
 
     #[test]
     fn test_part_2() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-18/test.txt");
         assert_eq!(part_2(input), 952408144115);
     }
 }

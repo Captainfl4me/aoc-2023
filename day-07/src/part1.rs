@@ -1,14 +1,23 @@
-use std::{collections::HashMap, cmp::Ordering};
+use std::{cmp::Ordering, collections::HashMap};
 
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("../../aoc-2023-inputs/day-07/input.txt");
     dbg!(part_1(input));
 }
 
 fn part_1(input: &str) -> u64 {
-    let mut hands = input.lines().map(|line| Hand::from_str(line)).collect::<Vec<Hand>>();
-    hands.sort_by(|a,b| a.cmp(b));
-    hands.into_iter().map(|f| f.bid).enumerate().reduce(|prev, (index,hand)| (index, prev.1 + hand * u64::try_from(index+1).unwrap())).unwrap().1
+    let mut hands = input
+        .lines()
+        .map(|line| Hand::from_str(line))
+        .collect::<Vec<Hand>>();
+    hands.sort_by(|a, b| a.cmp(b));
+    hands
+        .into_iter()
+        .map(|f| f.bid)
+        .enumerate()
+        .reduce(|prev, (index, hand)| (index, prev.1 + hand * u64::try_from(index + 1).unwrap()))
+        .unwrap()
+        .1
 }
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Hash)]
@@ -25,7 +34,7 @@ enum Card {
     N5 = 4,
     N4 = 3,
     N3 = 2,
-    N2 = 1
+    N2 = 1,
 }
 impl Card {
     pub fn from_char(c: &char) -> Option<Card> {
@@ -43,14 +52,14 @@ impl Card {
             '4' => Some(Card::N4),
             '3' => Some(Card::N3),
             '2' => Some(Card::N2),
-            _ => None
+            _ => None,
         }
     }
 }
 
 struct Hand {
     cards: Vec<Card>,
-    bid: u64
+    bid: u64,
 }
 #[derive(Debug, PartialEq, PartialOrd)]
 enum HandType {
@@ -69,13 +78,19 @@ impl Hand {
         for c in split[0].chars() {
             cards.push(Card::from_char(&c).unwrap());
         }
-        Hand { cards, bid: split[1].parse::<u64>().unwrap() }
+        Hand {
+            cards,
+            bid: split[1].parse::<u64>().unwrap(),
+        }
     }
     pub fn sorted(&self) -> Hand {
-        let mut new_hand = Hand { cards: self.cards.clone(), bid: self.bid };
+        let mut new_hand = Hand {
+            cards: self.cards.clone(),
+            bid: self.bid,
+        };
         new_hand.cards.sort();
         new_hand
-    } 
+    }
     pub fn hand_type(&self) -> HandType {
         let hand_sorted_og = self.sorted().cards;
         let mut hand_sorted_dedup = hand_sorted_og.clone();
@@ -148,9 +163,9 @@ impl Hand {
 #[cfg(test)]
 mod tests_day07_01 {
     use super::*;
-    
+
     #[test]
-    fn test_parsing_input(){
+    fn test_parsing_input() {
         let input = "32T3K 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.cards.len(), 5);
@@ -166,27 +181,27 @@ mod tests_day07_01 {
         let input = "32T3K 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::OnePair);
-        
+
         let input = "AA8AA 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::FourOfAKind);
-        
+
         let input = "K33KK 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::FullHouse);
-        
+
         let input = "K8K4K 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::ThreeOfAKind);
-        
+
         let input = "KTK44 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::TwoPairs);
-        
+
         let input = "A2345 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::HighCard);
-        
+
         let input = "KKKKK 0";
         let hand = Hand::from_str(input);
         assert_eq!(hand.hand_type(), HandType::FiveOfAKind);
@@ -194,7 +209,7 @@ mod tests_day07_01 {
 
     #[test]
     fn test_part1() {
-        let input = include_str!("./test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-07/test.txt");
         assert_eq!(part_1(input), 6440);
     }
 }
