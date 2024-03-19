@@ -1,0 +1,4 @@
+[placeholders.day]
+type = "string"
+prompt = "What day you want to init? (01-25)"
+default = "01"
