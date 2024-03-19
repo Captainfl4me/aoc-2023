@@ -129,7 +129,7 @@ mod tests_day18 {
 
     #[test]
     fn test_volume_count() {
-        let input = include_str!("../../aoc-2023-inputs/day-18/test.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-18/test2.txt");
         let instr = Instruction::from_str(input);
         let map = Map::from_instructions(&instr);
         assert_eq!(map.count_volume(), 49);

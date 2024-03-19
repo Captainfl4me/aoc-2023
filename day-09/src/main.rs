@@ -81,7 +81,7 @@ mod test_day09 {
 
     #[test]
     fn test_part2() {
-        let input = include_str!("../../aoc-2023-inputs/day-09/input.txt");
+        let input = include_str!("../../aoc-2023-inputs/day-09/test.txt");
         assert_eq!(part_2(input), 2);
     }
 }

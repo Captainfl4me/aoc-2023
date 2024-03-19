@@ -99,11 +99,6 @@ mod tests_day06 {
         let race = Race::parse_from_str_part2(input);
         assert_eq!(race.duration, 71530);
         assert_eq!(race.best_score, 940200);
-
-        let input = include_str!("../../aoc-2023-inputs/day-06/test.txt");
-        let race = Race::parse_from_str_part2(input);
-        assert_eq!(race.duration, 56717999);
-        assert_eq!(race.best_score, 334113513502430);
     }
 
     #[test]
