@@ -1,12 +1,14 @@
 use std::cmp::Ordering;
-use std::collections::BinaryHeap;
+use std::collections::{BinaryHeap, HashMap};
 
 fn main() {
     let input = include_str!("../../aoc-2023-inputs/day-23/input.txt");
     let now = std::time::Instant::now();
     dbg!(part_1(input));
     println!("Time: {:?}", now.elapsed());
-    // dbg!(part_2(input));
+    let now = std::time::Instant::now();
+    dbg!(part_2(input));
+    println!("Time: {:?}", now.elapsed());
 }
 
 #[derive(PartialEq, Eq)]
@@ -31,7 +33,7 @@ impl Tile {
         Self {
             tile_type: match c {
                 '#' => TileType::Wall,
-                '.' | 'S' => TileType::Empty,
+                '.' => TileType::Empty,
                 _ => TileType::Slope,
             },
             direction: match c {
@@ -43,16 +45,25 @@ impl Tile {
             },
         }
     }
+    pub fn from_char_without_slope(c: char) -> Self {
+        Self {
+            tile_type: match c {
+                '#' => TileType::Wall,
+                _ => TileType::Empty,
+            },
+            direction: None,
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Clone)]
 struct State {
-    position: (usize, usize),
-    already_visited: Vec<(usize, usize)>,
-    distance: u64,
+    position: (u16, u16),
+    already_visited: Vec<(u16, u16)>,
+    distance: u16,
 }
 impl State {
-    pub fn new(position: (usize, usize), distance: u64) -> Self {
+    pub fn new(position: (u16, u16), distance: u16) -> Self {
         Self {
             position,
             distance,
@@ -60,7 +71,7 @@ impl State {
         }
     }
 
-    pub fn new_from_state(position: (usize, usize), last_state: &State) -> Self {
+    pub fn new_from_state(position: (u16, u16), last_state: &State) -> Self {
         let mut already_visited = last_state.already_visited.clone();
         already_visited.push(last_state.position);
         Self {
@@ -72,7 +83,7 @@ impl State {
                 ]
                 .iter()
                 .max()
-                .unwrap_or(&0)) as u64,
+                .unwrap_or(&0)),
             already_visited,
         }
     }
@@ -102,6 +113,13 @@ impl Map {
             .collect();
         Self { tiles }
     }
+    pub fn from_str_without_slope(s: &str) -> Self {
+        let tiles = s
+            .lines()
+            .map(|line| line.chars().map(Tile::from_char_without_slope).collect())
+            .collect();
+        Self { tiles }
+    }
 
     pub fn next_states_available(&self, state: &State) -> Vec<State> {
         let mut states = Vec::new();
@@ -125,17 +143,17 @@ impl Map {
         ];
 
         for (dir, (x, y)) in next_positions {
-            if x < self.tiles.len() && y < self.tiles[0].len() {
+            if x < self.tiles.len() as u16 && y < self.tiles[0].len() as u16 {
                 if state.already_visited.contains(&(x, y)) {
                     continue;
                 }
 
-                match self.tiles[x][y].tile_type {
+                match self.tiles[x as usize][y as usize].tile_type {
                     TileType::Empty => {
                         states.push(State::new_from_state((x, y), &state));
                     }
                     TileType::Slope => {
-                        if let Some(direction) = self.tiles[x][y].direction {
+                        if let Some(direction) = self.tiles[x as usize][y as usize].direction {
                             if direction == dir {
                                 match direction {
                                     Direction::North => {
@@ -161,16 +179,18 @@ impl Map {
         states
     }
 
-    pub fn find_longest_hike(&self) -> u64 {
-        let mut dist = vec![u64::MIN; self.tiles[0].len() * self.tiles.len()];
+    pub fn find_longest_hike(&self) -> u16 {
+        let mut dist = vec![u16::MIN; self.tiles[0].len() * self.tiles.len()];
         let mut heap = BinaryHeap::new();
 
         // Add initiale states
         dist[0] = 0;
-        heap.push(State::new((0, 0), 0));
+        heap.push(State::new((0, 1), 0));
 
         while let Some(state) = heap.pop() {
-            if state.distance < dist[(state.position.0 * self.tiles.len()) + state.position.1] {
+            if state.distance
+                < dist[(state.position.0 as usize) * self.tiles.len() + (state.position.1 as usize)]
+            {
                 continue;
             }
 
@@ -178,27 +198,237 @@ impl Map {
 
             for next_state in next_states.iter() {
                 if next_state.distance
-                    > dist[next_state.position.0 * self.tiles.len() + next_state.position.1]
+                    > dist[(next_state.position.0 as usize) * self.tiles.len()
+                        + next_state.position.1 as usize]
                 {
-                    dist[next_state.position.0 * self.tiles.len() + next_state.position.1] =
-                        next_state.distance;
+                    dist[(next_state.position.0 as usize) * self.tiles.len()
+                        + next_state.position.1 as usize] = next_state.distance;
                     heap.push(next_state.clone());
                 }
             }
         }
 
-        *dist.iter().max().unwrap_or(&0) - 1
+        *dist[(self.tiles.len() - 1) * self.tiles[0].len()..]
+            .iter()
+            .max()
+            .unwrap_or(&0)
     }
 }
 
-fn part_1(input: &str) -> u64 {
+#[derive(Eq, PartialEq, Clone)]
+struct GraphState {
+    state: State,
+    origin: (u16, u16),
+}
+impl GraphState {
+    pub fn new(origin: (u16, u16), state: State) -> Self {
+        Self { state, origin }
+    }
+}
+#[derive(Debug, Clone)]
+struct Path {
+    start: (u16, u16),
+    end: (u16, u16),
+    weight: u16,
+}
+#[derive(Debug, Clone)]
+struct Node {
+    id: u8,
+    nb_path: u8,
+    paths: [u8; 4],
+}
+impl Node {
+    pub fn new(id: u8) -> Self {
+        Self {
+            id,
+            nb_path: 0,
+            paths: [0; 4],
+        }
+    }
+
+    pub fn add_path(&mut self, path_id: u8) {
+        if self.nb_path == 4 {
+            panic!("Too many path for this node");
+        }
+        self.paths[self.nb_path as usize] = path_id;
+        self.nb_path += 1;
+    }
+}
+struct GraphMap {
+    paths: Vec<Path>,
+    node_lookup_table: HashMap<(u16, u16), Node>,
+    end_node_coord: (u16, u16),
+}
+impl GraphMap {
+    pub fn new(input: &str) -> Self {
+        let map = Map::from_str_without_slope(input);
+        let mut paths = Vec::new();
+        let mut node_lookup_table: HashMap<(u16, u16), Node> = HashMap::new();
+        let mut heap = Vec::new();
+        heap.push(GraphState::new((0, 1), State::new((0, 1), 0)));
+
+        while let Some(graph_state) = heap.pop() {
+            let state = graph_state.state;
+            let mut previous_state = state.clone();
+            loop {
+                let next_states = map.next_states_available(&previous_state);
+
+                match next_states.len().cmp(&1) {
+                    Ordering::Equal => {
+                        previous_state = next_states.first().unwrap().clone();
+                    }
+                    Ordering::Greater => {
+                        if paths.iter().any(|path: &Path| {
+                            (path.start == graph_state.origin
+                                && path.end == previous_state.position)
+                                || (path.start == previous_state.position
+                                    && path.end == graph_state.origin)
+                        }) {
+                            break;
+                        }
+
+                        // Create path from state to previous_state
+                        let path = Path {
+                            start: graph_state.origin,
+                            end: previous_state.position,
+                            weight: previous_state.distance - state.distance + 1,
+                        };
+                        paths.push(path);
+
+                        if !node_lookup_table.contains_key(&graph_state.origin) {
+                            node_lookup_table.insert(
+                                graph_state.origin,
+                                Node::new((node_lookup_table.len() - 1) as u8),
+                            );
+                        }
+                        node_lookup_table
+                            .get_mut(&graph_state.origin)
+                            .unwrap()
+                            .add_path((paths.len() - 1) as u8);
+
+                        if !node_lookup_table.contains_key(&previous_state.position) {
+                            node_lookup_table.insert(
+                                previous_state.position,
+                                Node::new((node_lookup_table.len() - 1) as u8),
+                            );
+                        }
+                        node_lookup_table
+                            .get_mut(&previous_state.position)
+                            .unwrap()
+                            .add_path((paths.len() - 1) as u8);
+
+                        for next_state in next_states.iter() {
+                            heap.push(GraphState::new(previous_state.position, next_state.clone()));
+                        }
+                        break;
+                    }
+                    Ordering::Less => {
+                        if paths.iter().any(|path: &Path| {
+                            (path.start == graph_state.origin
+                                && path.end == previous_state.position)
+                                || (path.start == previous_state.position
+                                    && path.end == graph_state.origin)
+                        }) {
+                            break;
+                        }
+
+                        if previous_state.position.0 as usize == map.tiles.len() - 1 {
+                            let path = Path {
+                                start: graph_state.origin,
+                                end: previous_state.position,
+                                weight: previous_state.distance - state.distance + 1,
+                            };
+                            paths.push(path);
+
+                            if node_lookup_table.contains_key(&graph_state.origin) {
+                                node_lookup_table.insert(
+                                    graph_state.origin,
+                                    Node::new((node_lookup_table.len() - 1) as u8),
+                                );
+                            }
+                            node_lookup_table
+                                .get_mut(&graph_state.origin)
+                                .unwrap()
+                                .add_path((paths.len() - 1) as u8);
+
+                            node_lookup_table.insert(
+                                previous_state.position,
+                                Node::new((node_lookup_table.len() - 1) as u8),
+                            );
+                            node_lookup_table
+                                .get_mut(&previous_state.position)
+                                .unwrap()
+                                .add_path((paths.len() - 1) as u8);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        Self {
+            paths,
+            node_lookup_table,
+            end_node_coord: (
+                (map.tiles.len() - 1) as u16,
+                (map.tiles[0].len() - 2) as u16,
+            ),
+        }
+    }
+
+    pub fn find_longest_hike(&self) -> u16 {
+        self.find_longest_path_from_coord(0, (0, 1), 0) - 1
+    }
+
+    fn find_longest_path_from_coord(
+        &self,
+        already_visited: u64,
+        coord: (u16, u16),
+        weight: u16,
+    ) -> u16 {
+        let mut states = Vec::new();
+        states.push((already_visited, coord, weight));
+        let end_node = self.node_lookup_table.get(&self.end_node_coord).unwrap();
+
+        let mut longest_path = u16::MIN;
+        while let Some((mut already_visited, coord, weight)) = states.pop() {
+            let node = self.node_lookup_table.get(&coord).unwrap();
+            if end_node.id == node.id {
+                if weight > longest_path {
+                    longest_path = weight;
+                }
+                continue;
+            }
+
+            already_visited |= 1 << node.id;
+            for index in node.paths[0..node.nb_path as usize].iter() {
+                let path = self.paths.get(*index as usize).unwrap();
+                let next_coord = if path.start == coord {
+                    path.end
+                } else {
+                    path.start
+                };
+
+                let next_node = self.node_lookup_table.get(&next_coord).unwrap();
+                if already_visited & (1 << next_node.id) == 0 {
+                    states.push((already_visited, next_coord, weight + path.weight));
+                }
+            }
+        }
+        longest_path + self.paths.get(end_node.paths[0] as usize).unwrap().weight
+    }
+}
+
+fn part_1(input: &str) -> u16 {
     let map = Map::from_str(input);
     map.find_longest_hike()
 }
 
-// fn part_2(input: &str) -> u64 {
-//     todo!()
-// }
+fn part_2(input: &str) -> u16 {
+    let graph_map = GraphMap::new(input);
+    graph_map.find_longest_hike()
+    // graph_map.node_lookup_table.len() as u16
+}
 
 #[cfg(test)]
 mod tests_day23 {
@@ -210,9 +440,21 @@ mod tests_day23 {
         assert_eq!(part_1(input), 94);
     }
 
-    /* #[test]
+    #[test]
+    fn test_graph_map() {
+        let input = include_str!("../../aoc-2023-inputs/day-23/test2.txt");
+        let graph_map = GraphMap::new(input);
+        dbg!(graph_map.paths.to_vec());
+        assert_eq!(graph_map.paths.len(), 5);
+        assert_eq!(graph_map.paths[0].weight, 4);
+        assert_eq!(graph_map.paths.iter().map(|p| p.weight).sum::<u16>(), 20);
+    }
+
+    #[test]
     fn test_part_2() {
-        let input = include_str!("./test.txt");
-        assert_eq!(part_2(input), 0);
-    } */
+        let input = include_str!("../../aoc-2023-inputs/day-23/test2.txt");
+        assert_eq!(part_2(input), 13);
+        let input = include_str!("../../aoc-2023-inputs/day-23/test.txt");
+        assert_eq!(part_2(input), 154);
+    }
 }
