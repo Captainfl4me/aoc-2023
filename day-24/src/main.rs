@@ -1,19 +1,22 @@
 use regex::Regex;
+use ndarray::prelude::*;
+use ndarray_linalg::*;
+use itertools::Itertools;
 
 fn main() {
     let input = include_str!("../../aoc-2023-inputs/day-24/input.txt");
     let now = std::time::Instant::now();
     dbg!(part_1(input, 200000000000000, 400000000000000));
-    // dbg!(part_2(input));
+    dbg!(part_2(input));
     println!("Time: {:?}", now.elapsed());
 }
 
 struct Path {
-    point: (u64, u64, u64),
+    point: (i64, i64, i64),
     v0: (i64, i64, i64),
 }
 impl Path {
-    fn new(point: (u64, u64, u64), v0: (i64, i64, i64)) -> Self {
+    fn new(point: (i64, i64, i64), v0: (i64, i64, i64)) -> Self {
         Self { point, v0 }
     }
 
@@ -99,9 +102,70 @@ fn part_1(input: &str, min_box: u64, max_box: u64) -> u64 {
     count
 }
 
-/* fn part_2(input: &str) -> u64 {
-    todo!()
-} */
+fn solve_system(p1: &Path, p2: &Path, p3: &Path) -> Vec<f64> {
+    let a: Array2<i64> = arr2(&[[0, p2.v0.2 - p1.v0.2, p1.v0.1 - p2.v0.1, 0, p1.point.2 - p2.point.2, p2.point.1 - p1.point.1],
+            [p1.v0.2 - p2.v0.2, 0, p2.v0.0 - p1.v0.0, p2.point.2 - p1.point.2, 0, p1.point.0 - p2.point.0],
+            [p2.v0.1 - p1.v0.1, p1.v0.0 - p2.v0.0, 0, p1.point.1 - p2.point.1, p2.point.0 - p1.point.0, 0],
+            [0, p3.v0.2 - p1.v0.2, p1.v0.1 - p3.v0.1, 0, p1.point.2 - p3.point.2, p3.point.1 - p1.point.1],
+            [p1.v0.2 - p3.v0.2, 0, p3.v0.0 - p1.v0.0, p3.point.2 - p1.point.2, 0, p1.point.0 - p3.point.0],
+            [p3.v0.1 - p1.v0.1, p1.v0.0 - p3.v0.0, 0, p1.point.1 - p3.point.1, p3.point.0 - p1.point.0, 0]]);
+    let a: Array2<f64> = a.mapv(|x| x as f64);
+
+    let b: Array1<i64> = -arr1(&[p1.point.1*p1.v0.2 - p2.point.1*p2.v0.2 - p1.point.2*p1.v0.1 + p2.point.2*p2.v0.1,
+            p1.point.2*p1.v0.0 - p2.point.2*p2.v0.0 - p1.point.0*p1.v0.2 + p2.point.0*p2.v0.2,
+            p1.point.0*p1.v0.1 - p2.point.0*p2.v0.1 - p1.point.1*p1.v0.0 + p2.point.1*p2.v0.0,
+            p1.point.1*p1.v0.2 - p3.point.1*p3.v0.2 - p1.point.2*p1.v0.1 + p3.point.2*p3.v0.1,
+            p1.point.2*p1.v0.0 - p3.point.2*p3.v0.0 - p1.point.0*p1.v0.2 + p3.point.0*p3.v0.2,
+            p1.point.0*p1.v0.1 - p3.point.0*p3.v0.1 - p1.point.1*p1.v0.0 + p3.point.1*p3.v0.0]);
+    let b: Array1<f64> = b.mapv(|x| x as f64);
+
+    let x = a.solve(&b).unwrap();
+    x.into_raw_vec()
+}
+
+fn part_2(input: &str) -> u64 {
+    let re = Regex::new(r"(\d+),\s+(\d+),\s+(\d+)\s+@\s+(-?\d+),\s+(-?\d+),\s+(-?\d+)").unwrap();
+    let mut paths = Vec::new();
+    for (_, [px, py, pz, vx, vy, vz]) in re.captures_iter(input).map(|c| c.extract()) {
+        let path = Path::new(
+            (
+                px.parse().unwrap(),
+                py.parse().unwrap(),
+                pz.parse().unwrap(),
+            ),
+            (
+                vx.parse().unwrap(),
+                vy.parse().unwrap(),
+                vz.parse().unwrap(),
+            ),
+        );
+        paths.push(path);
+    }
+    
+    // Solve the system of equations for the first 10 combinations of paths (to prevent float
+    // imprecision errors)
+    let results = paths
+        .iter()
+        .tuple_combinations()
+        .map(|(p1, p2, p3)| { let r = solve_system(p1, p2, p3); vec![r[0], r[1], r[2]]})
+        .take(10)
+        .collect::<Vec<_>>();
+
+    let mut x = 0.0;
+    let mut y = 0.0;
+    let mut z = 0.0;
+    
+    for r in results.iter() {
+        x += r[0];
+        y += r[1];
+        z += r[2];
+    }
+    let xr = (x / results.len() as f64).round() as u64;
+    let yr = (y / results.len() as f64).round() as u64;
+    let zr = (z / results.len() as f64).round() as u64;
+
+    xr + yr + zr
+}
 
 #[cfg(test)]
 mod tests_day24 {
@@ -114,9 +178,9 @@ mod tests_day24 {
         assert_eq!(part_1(input, 7, 27), 2);
     }
 
-    // #[test]
-    // fn test_part_2() {
-    //     let input = include_str!("./test.txt");
-    //     assert_eq!(part_2(input), 0);
-    // }
+    #[test]
+    fn test_part_2() {
+        let input = include_str!("../../aoc-2023-inputs/day-24/test.txt");
+        assert_eq!(part_2(input), 47);
+    }
 }
