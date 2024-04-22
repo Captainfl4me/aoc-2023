@@ -63,7 +63,7 @@ impl Direction {
             Direction::West => Direction::North,
         }
     }
-    pub fn to_usize(&self) -> usize {
+    pub fn usize(&self) -> usize {
         match self {
             Direction::North => 0,
             Direction::East => 1,
@@ -120,8 +120,8 @@ impl Map {
 
     fn step_pos(&self, pos: Position, dir: Direction) -> Option<Position> {
         let new_pos = pos.move_to(dir);
-        if new_pos.is_some() {
-            if new_pos.unwrap().x >= self.grid[0].len() || new_pos.unwrap().y >= self.grid.len() {
+        if let Some(new_pos) = new_pos {
+            if new_pos.x >= self.grid[0].len() || new_pos.y >= self.grid.len() {
                 return None;
             }
         }
@@ -163,7 +163,7 @@ impl Map {
             let states = self.state_from_dir(Position::new(0, 0), dir, 0, min_length, max_length);
             for state in states {
                 dist[((state.pos.y * self.grid.len()) + state.pos.x) * 4
-                    + state.direction.to_usize()] = state.heat_loss;
+                    + state.direction.usize()] = state.heat_loss;
                 heap.push(state);
             }
         }
@@ -171,7 +171,7 @@ impl Map {
         while let Some(state) = heap.pop() {
             if state.heat_loss
                 > dist[((state.pos.y * self.grid.len()) + state.pos.x) * 4
-                    + state.direction.to_usize()]
+                    + state.direction.usize()]
             {
                 continue;
             }
@@ -184,16 +184,16 @@ impl Map {
             for next_state in next_states.iter().flatten() {
                 if next_state.heat_loss
                     < dist[((next_state.pos.y * self.grid.len()) + next_state.pos.x) * 4
-                        + next_state.direction.to_usize()]
+                        + next_state.direction.usize()]
                 {
                     dist[((next_state.pos.y * self.grid.len()) + next_state.pos.x) * 4
-                        + next_state.direction.to_usize()] = next_state.heat_loss;
+                        + next_state.direction.usize()] = next_state.heat_loss;
                     heap.push(*next_state);
                 }
             }
         }
         let goal = ((self.grid.len() * self.grid[0].len()) - 1) * 4;
-        dist[goal..(goal + 4)].iter().min().unwrap().clone() as u64
+        *dist[goal..(goal + 4)].iter().min().unwrap() as u64
     }
 }
 

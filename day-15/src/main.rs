@@ -5,7 +5,7 @@ fn main() {
 }
 
 fn part_1(input: &str) -> u64 {
-    input.split(',').map(|w| hash(w)).sum()
+    input.split(',').map(hash).sum()
 }
 
 fn part_2(input: &str) -> u64 {
@@ -45,7 +45,7 @@ fn hash(input: &str) -> u64 {
     for c in input.chars() {
         hash += c as u64;
         hash *= 17;
-        hash = hash % 256;
+        hash %= 256;
     }
     hash
 }
@@ -72,11 +72,7 @@ impl Box {
         Self { lenses: vec![] }
     }
     fn add_lens(&mut self, lens: Lens) {
-        let lens_with_label = self
-            .lenses
-            .iter_mut()
-            .filter(|l| l.label == lens.label)
-            .next();
+        let lens_with_label = self.lenses.iter_mut().find(|l| l.label == lens.label);
         if lens_with_label.is_some() {
             lens_with_label.unwrap().focal_length = lens.focal_length;
         } else {

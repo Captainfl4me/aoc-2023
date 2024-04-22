@@ -139,7 +139,7 @@ fn find_mirror(input: &str) -> Mirror {
     }
 }
 
-fn cmp_diff_mirror(vec1: &Vec<char>, vec2: &Vec<char>) -> bool {
+fn cmp_diff_mirror(vec1: &Vec<char>, vec2: &[char]) -> bool {
     let mut num_of_diff = 0;
     for i in 0..vec1.len() {
         if vec1[i] != vec2[i] {
@@ -261,4 +261,3 @@ mod test_day13 {
         assert_eq!(result, 400);
     }
 }
-

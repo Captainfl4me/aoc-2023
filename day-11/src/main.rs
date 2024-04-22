@@ -11,8 +11,8 @@ fn part_1(input: &str) -> u64 {
     let galaxies = map.find_all_galaxy();
     let mut distance_sum = 0;
     for (i, galaxy) in galaxies.iter().enumerate() {
-        for j in i + 1..galaxies.len() {
-            distance_sum += distance(galaxy, &galaxies[j]);
+        for j in galaxies.iter().skip(i + 1) {
+            distance_sum += distance(galaxy, j);
         }
     }
     distance_sum
@@ -24,8 +24,8 @@ fn part_2(input: &str, expansion: u32) -> u64 {
     let galaxies = map.find_all_galaxy_with_big_expansion(expansion);
     let mut distance_sum: u64 = 0;
     for (i, galaxy) in galaxies.iter().enumerate() {
-        for j in i + 1..galaxies.len() {
-            distance_sum += distance(galaxy, &galaxies[j]);
+        for j in galaxies.iter().skip(i + 1) {
+            distance_sum += distance(galaxy, j);
         }
     }
     distance_sum
@@ -62,7 +62,7 @@ impl Map {
     pub fn new(input: &str) -> Self {
         let map: Vec<Vec<Galaxy>> = input
             .lines()
-            .map(|line| line.chars().map(|c| Galaxy::new(c)).collect())
+            .map(|line| line.chars().map(Galaxy::new).collect())
             .collect();
         let width = map[0].len();
         let height = map.len();

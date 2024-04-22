@@ -15,6 +15,12 @@ pub struct SearchMatchResult {
     pub length: u32,
 }
 
+impl Default for StringSearchTree {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StringSearchTree {
     pub fn new() -> StringSearchTree {
         StringSearchTree::Root { neighboors: Vec::new() }
@@ -23,10 +29,8 @@ impl StringSearchTree {
     pub fn insert_leaf(&mut self, value: char) {
         match self {
             StringSearchTree::Root { neighboors } => {
-                if neighboors.len() == 1 {
-                    if matches!(neighboors[0].as_ref(), StringSearchTree::Empty { .. }) {
-                        panic!("Cannot insert leaf at same level than empty node");
-                    }
+                if neighboors.len() == 1 && matches!(neighboors[0].as_ref(), StringSearchTree::Empty { .. }) {
+                    panic!("Cannot insert leaf at same level than empty node");
                 }
                 neighboors.push(Box::new(StringSearchTree::Leaf {
                     value,
@@ -34,10 +38,8 @@ impl StringSearchTree {
                 }));
             }
             StringSearchTree::Leaf { neighboors, .. } => {
-                if neighboors.len() == 1 {
-                    if matches!(neighboors[0].as_ref(), StringSearchTree::Empty { .. }) {
-                        panic!("Cannot insert leaf at same level than empty node");
-                    }
+                if neighboors.len() == 1 && matches!(neighboors[0].as_ref(), StringSearchTree::Empty { .. }) {
+                    panic!("Cannot insert leaf at same level than empty node");
                 }
                 neighboors.push(Box::new(StringSearchTree::Leaf {
                     value,
@@ -53,7 +55,7 @@ impl StringSearchTree {
     pub fn insert_empty(&mut self, return_value: u32) {
         match self {
             StringSearchTree::Root { neighboors } => {
-                if neighboors.len() > 0 {
+                if !neighboors.is_empty() {
                     panic!("Cannot insert empty into root with neighboors");
                 }
                 neighboors.push(Box::new(StringSearchTree::Empty {
@@ -61,7 +63,7 @@ impl StringSearchTree {
                 }));
             }
             StringSearchTree::Leaf { neighboors, .. } => {
-                if neighboors.len() > 0 {
+                if !neighboors.is_empty() {
                     panic!("Cannot insert empty into leaf with neighboors");
                 }
                 neighboors.push(Box::new(StringSearchTree::Empty {

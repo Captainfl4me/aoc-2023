@@ -43,12 +43,12 @@ fn part_2(input: &str) -> u32 {
 
 fn num_of_match_cards(line: &str) -> u32 {
     let mut score: u32 = 0;
-    let cards_slice: Vec<&str> = line.split(":").collect::<Vec<&str>>()[1]
-        .split("|")
+    let cards_slice: Vec<&str> = line.split(':').collect::<Vec<&str>>()[1]
+        .split('|')
         .collect();
     let win_cards: Vec<u32> = cards_slice[0]
         .trim()
-        .split(" ")
+        .split(' ')
         .filter(|&f| !f.is_empty())
         .collect::<Vec<&str>>()
         .iter()
@@ -56,7 +56,7 @@ fn num_of_match_cards(line: &str) -> u32 {
         .collect();
     let cards: Vec<u32> = cards_slice[1]
         .trim()
-        .split(" ")
+        .split(' ')
         .filter(|&f| !f.is_empty())
         .collect::<Vec<&str>>()
         .iter()
@@ -74,12 +74,12 @@ fn num_of_match_cards(line: &str) -> u32 {
 
 fn card_point(line: &str) -> u32 {
     let mut score: u32 = 0;
-    let cards_slice: Vec<&str> = line.split(":").collect::<Vec<&str>>()[1]
-        .split("|")
+    let cards_slice: Vec<&str> = line.split(':').collect::<Vec<&str>>()[1]
+        .split('|')
         .collect();
     let win_cards: Vec<u32> = cards_slice[0]
         .trim()
-        .split(" ")
+        .split(' ')
         .filter(|&f| !f.is_empty())
         .collect::<Vec<&str>>()
         .iter()
@@ -87,7 +87,7 @@ fn card_point(line: &str) -> u32 {
         .collect();
     let cards: Vec<u32> = cards_slice[1]
         .trim()
-        .split(" ")
+        .split(' ')
         .filter(|&f| !f.is_empty())
         .collect::<Vec<&str>>()
         .iter()

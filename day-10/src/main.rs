@@ -9,8 +9,7 @@ fn part_1(input: &str) -> u32 {
     map.set_start_open_directions();
 
     let path_length = map.define_loop();
-    let greatest_distance = (path_length - 1) / 2;
-    greatest_distance
+    (path_length - 1) / 2
 }
 
 fn part_2(input: &str) -> u32 {
@@ -201,19 +200,18 @@ impl Map {
                     .loop_dir = Some(*last_next_dir);
             }
             last_next_dir = next_dir;
-            let next_coord = current_tile.coord_from_direction(&next_dir);
+            let next_coord = current_tile.coord_from_direction(next_dir);
             let next_tile = self_copy.get_tile(next_coord.0, next_coord.1).unwrap();
 
             path_length += 1;
             next_dir = next_tile
                 .open_directions
                 .iter()
-                .filter(|dir| {
+                .find(|dir| {
                     **dir
                         != next_tile
                             .relative_direction_from_coord((&current_tile.x, &current_tile.y))
                 })
-                .next()
                 .unwrap();
             current_tile = next_tile;
             if current_tile.pipe == Pipe::Start {
@@ -247,10 +245,8 @@ impl Map {
                         is_inside = !is_inside;
                     }
                     last_loop_dir = tile.loop_dir.unwrap();
-                } else {
-                    if is_inside {
-                        tile_count += 1;
-                    }
+                } else if is_inside {
+                    tile_count += 1;
                 }
             }
         }
@@ -293,4 +289,3 @@ mod test_day10 {
         assert_eq!(part_2(input), 10);
     }
 }
-

@@ -77,13 +77,10 @@ impl State {
         Self {
             position,
             distance: last_state.distance
-                + (*vec![
-                    position.0.abs_diff(last_state.position.0),
-                    position.1.abs_diff(last_state.position.1),
-                ]
-                .iter()
-                .max()
-                .unwrap_or(&0)),
+                + position
+                    .0
+                    .abs_diff(last_state.position.0)
+                    .max(position.1.abs_diff(last_state.position.1)),
             already_visited,
         }
     }
@@ -150,23 +147,23 @@ impl Map {
 
                 match self.tiles[x as usize][y as usize].tile_type {
                     TileType::Empty => {
-                        states.push(State::new_from_state((x, y), &state));
+                        states.push(State::new_from_state((x, y), state));
                     }
                     TileType::Slope => {
                         if let Some(direction) = self.tiles[x as usize][y as usize].direction {
                             if direction == dir {
                                 match direction {
                                     Direction::North => {
-                                        states.push(State::new_from_state((x - 1, y), &state))
+                                        states.push(State::new_from_state((x - 1, y), state))
                                     }
                                     Direction::South => {
-                                        states.push(State::new_from_state((x + 1, y), &state))
+                                        states.push(State::new_from_state((x + 1, y), state))
                                     }
                                     Direction::West => {
-                                        states.push(State::new_from_state((x, y - 1), &state))
+                                        states.push(State::new_from_state((x, y - 1), state))
                                     }
                                     Direction::East => {
-                                        states.push(State::new_from_state((x, y + 1), &state))
+                                        states.push(State::new_from_state((x, y + 1), state))
                                     }
                                 }
                             }
@@ -295,23 +292,15 @@ impl GraphMap {
                         };
                         paths.push(path);
 
-                        if !node_lookup_table.contains_key(&graph_state.origin) {
-                            node_lookup_table.insert(
-                                graph_state.origin,
-                                Node::new((node_lookup_table.len() - 1) as u8),
-                            );
-                        }
+                        let node_lookup_table_last_index = node_lookup_table.len().wrapping_sub(1) as u8;
+                        node_lookup_table.entry(graph_state.origin).or_insert_with(|| Node::new(node_lookup_table_last_index));
                         node_lookup_table
                             .get_mut(&graph_state.origin)
                             .unwrap()
                             .add_path((paths.len() - 1) as u8);
 
-                        if !node_lookup_table.contains_key(&previous_state.position) {
-                            node_lookup_table.insert(
-                                previous_state.position,
-                                Node::new((node_lookup_table.len() - 1) as u8),
-                            );
-                        }
+                        let node_lookup_table_last_index = node_lookup_table.len().wrapping_sub(1) as u8;
+                        node_lookup_table.entry(previous_state.position).or_insert_with(|| Node::new(node_lookup_table_last_index));
                         node_lookup_table
                             .get_mut(&previous_state.position)
                             .unwrap()
@@ -400,7 +389,7 @@ impl GraphMap {
                 continue;
             }
 
-            already_visited |= 1 << node.id;
+            already_visited |= 1u64.checked_shl(node.id as u32).unwrap_or(0);
             for index in node.paths[0..node.nb_path as usize].iter() {
                 let path = self.paths.get(*index as usize).unwrap();
                 let next_coord = if path.start == coord {
@@ -410,7 +399,7 @@ impl GraphMap {
                 };
 
                 let next_node = self.node_lookup_table.get(&next_coord).unwrap();
-                if already_visited & (1 << next_node.id) == 0 {
+                if already_visited & 1u64.checked_shl(next_node.id as u32).unwrap_or(0) == 0 {
                     states.push((already_visited, next_coord, weight + path.weight));
                 }
             }

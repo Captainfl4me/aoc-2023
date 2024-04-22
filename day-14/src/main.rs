@@ -24,12 +24,10 @@ fn part_2(input: &str, cycle: usize) -> u64 {
     let mut start_cycle_index = 0;
     for i in 0..cycle {
         if cache_map.contains_key(&map) {
-            if cycle_map.len() <= 0 {
+            if cycle_map.is_empty() {
                 start_cycle_index = i;
-            } else {
-                if map == *cycle_map.first().unwrap() {
-                    break;
-                }
+            } else if map == *cycle_map.first().unwrap() {
+                break;
             }
             cycle_map.push(map.clone());
             map = cache_map.get(&map).unwrap().clone();

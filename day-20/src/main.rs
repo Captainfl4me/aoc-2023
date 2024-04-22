@@ -21,7 +21,7 @@ fn part_1(input: &str) -> u64 {
                 cap.get(3)
                     .unwrap()
                     .as_str()
-                    .split(",")
+                    .split(',')
                     .map(|s| s.trim())
                     .collect::<Vec<_>>(),
             )
@@ -127,7 +127,7 @@ fn part_2(input: &str) -> u64 {
                 cap.get(3)
                     .unwrap()
                     .as_str()
-                    .split(",")
+                    .split(',')
                     .map(|s| s.trim())
                     .collect::<Vec<_>>(),
             )
@@ -356,13 +356,10 @@ impl<'a> Module<'a> {
         }
     }
     pub fn add_input(self_: &Rc<RefCell<Module<'a>>>, input: &Rc<RefCell<Module<'a>>>) {
-        match &*self_.borrow() {
-            Module::Conjunction(conjunction) => {
-                let mut conjunction = conjunction.borrow_mut();
-                conjunction.inputs.push(Rc::clone(input));
-                conjunction.last_pulse.push(false);
-            }
-            _ => {}
+        if let Module::Conjunction(conjunction) = &*self_.borrow() {
+            let mut conjunction = conjunction.borrow_mut();
+            conjunction.inputs.push(Rc::clone(input));
+            conjunction.last_pulse.push(false);
         }
     }
     pub fn add_outputs(self_: &Rc<RefCell<Module<'a>>>, outputs: Vec<Rc<RefCell<Module<'a>>>>) {

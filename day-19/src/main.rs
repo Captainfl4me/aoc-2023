@@ -62,7 +62,7 @@ fn part_1(input: &str) -> u64 {
             let mut next_workflow = "in";
             while next_workflow != "A" && next_workflow != "R" {
                 for rule in workflows.get(next_workflow).unwrap().rules.iter() {
-                    if rule.is_valid(&piece) {
+                    if rule.is_valid(piece) {
                         next_workflow = rule.fallback.as_str();
                         break;
                     }
@@ -396,7 +396,7 @@ mod tests_day19 {
         assert_eq!(new_piece.x, 2001..=4000);
         let inv_new_piece = rule.apply_inverse_to_range(&piece).unwrap();
         assert_eq!(inv_new_piece.x, 1..=2000);
-        assert_eq!(rule.apply_inverse_to_range(&new_piece).is_none(), true);
+        assert!(rule.apply_inverse_to_range(&new_piece).is_none());
     }
     #[test]
     fn test_part_2() {

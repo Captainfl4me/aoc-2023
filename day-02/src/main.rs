@@ -22,12 +22,12 @@ fn part_2(input: &str) -> u32 {
 }
 
 fn is_game_possible(input_line: &str) -> u32 {
-    let input_slice_id: Vec<&str> = input_line.split(":").collect();
+    let input_slice_id: Vec<&str> = input_line.split(':').collect();
     let game_id = parse_game_id(input_slice_id[0]);
 
-    for round_slice in input_slice_id[1].split(";") {
-        for color_slice in round_slice.split(",") {
-            let key_value_split: Vec<&str> = color_slice.trim().split(" ").collect();
+    for round_slice in input_slice_id[1].split(';') {
+        for color_slice in round_slice.split(',') {
+            let key_value_split: Vec<&str> = color_slice.trim().split(' ').collect();
             let current_num: i32 = key_value_split[0].to_string().parse().unwrap();
             match key_value_split[1] {
                 "blue" => {
@@ -54,12 +54,12 @@ fn is_game_possible(input_line: &str) -> u32 {
 }
 
 fn fewest_num_possible(input_line: &str) -> [u32; 3] {
-    let input_slice_id: Vec<&str> = input_line.split(":").collect();
+    let input_slice_id: Vec<&str> = input_line.split(':').collect();
     let mut fewest_color_num: [u32; 3] = [0, 0, 0];
 
-    for round_slice in input_slice_id[1].split(";") {
-        for color_slice in round_slice.split(",") {
-            let key_value_split: Vec<&str> = color_slice.trim().split(" ").collect();
+    for round_slice in input_slice_id[1].split(';') {
+        for color_slice in round_slice.split(',') {
+            let key_value_split: Vec<&str> = color_slice.trim().split(' ').collect();
             let current_num: u32 = key_value_split[0].to_string().parse().unwrap();
             match key_value_split[1] {
                 "red" => {
@@ -86,7 +86,7 @@ fn fewest_num_possible(input_line: &str) -> [u32; 3] {
 }
 
 fn parse_game_id(input_slice: &str) -> u32 {
-    let str_slice: Vec<&str> = input_slice.split(" ").collect();
+    let str_slice: Vec<&str> = input_slice.split(' ').collect();
     str_slice[1].to_string().parse().unwrap()
 }
 

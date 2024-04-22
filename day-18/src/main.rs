@@ -95,7 +95,7 @@ struct Map {
     nodes: Vec<Node>,
 }
 impl Map {
-    pub fn from_instructions(instructions: &Vec<Instruction>) -> Self {
+    pub fn from_instructions(instructions: &[Instruction]) -> Self {
         let mut nodes: Vec<Node> = vec![];
         let mut current_x = 0;
         let mut current_y = 0;
@@ -119,7 +119,7 @@ impl Map {
                     let new_sum = sum + node1.x * node2.y - node1.y * node2.x;
                     (new_sum, new_perimeter)
                 });
-        ((area.abs() as u64 + perimeter) / 2) + 1
+        ((area.unsigned_abs() + perimeter) / 2) + 1
     }
 }
 

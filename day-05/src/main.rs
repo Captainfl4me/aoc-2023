@@ -77,9 +77,9 @@ impl CustomMapRange {
             length,
         }
     }
-    pub fn from_str(input: &str) -> CustomMapRange {
+    pub fn from_str_input(input: &str) -> CustomMapRange {
         let num_split: Vec<u64> = input
-            .split(" ")
+            .split(' ')
             .map(|f| f.to_string().parse::<u64>().unwrap())
             .collect();
         CustomMapRange::new(num_split[1], num_split[0], num_split[2])
@@ -143,8 +143,8 @@ impl CustomMultipleMapRange {
     pub fn get(&self, num_src: u64) -> u64 {
         for range in self.ranges.iter() {
             let check_map = range.get(num_src);
-            if check_map.is_some() {
-                return check_map.unwrap();
+            if let Some(c) = check_map {
+                return c;
             }
         }
         num_src
@@ -161,7 +161,7 @@ impl CustomMultipleMapRange {
                 let mut has_match = true;
                 for range in self.ranges.iter() {
                     let get_range = range.get_range(range_src);
-                    if get_range.len() == 1 && get_range[0].has_match == false {
+                    if get_range.len() == 1 && !get_range[0].has_match {
                         has_match = false;
                     } else {
                         for match_range in get_range {
@@ -175,7 +175,7 @@ impl CustomMultipleMapRange {
                         break;
                     }
                 }
-                if has_match == false {
+                if !has_match {
                     res.push(*range_src);
                 } else {
                     ranges_src.append(&mut match_vec);
@@ -185,7 +185,7 @@ impl CustomMultipleMapRange {
             new_ranges_src = ranges_src.clone();
             ranges_src.clear();
 
-            if new_ranges_src.len() <= 0 {
+            if new_ranges_src.is_empty() {
                 break;
             }
         }
@@ -194,16 +194,22 @@ impl CustomMultipleMapRange {
     }
 }
 
+impl Default for CustomMultipleMapRange {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn part_1(input: &str) -> u64 {
     let mut input_lines = input.lines();
     let seeds: Vec<u64> = input_lines
         .next()
         .unwrap()
-        .split(":")
+        .split(':')
         .last()
         .unwrap()
         .trim()
-        .split(" ")
+        .split(' ')
         .map(|f| f.parse::<u64>().unwrap())
         .collect();
 
@@ -222,7 +228,7 @@ fn part_1(input: &str) -> u64 {
         } else if !is_building_map && line.contains("map") {
             is_building_map = true;
         } else {
-            current_map.add_range(CustomMapRange::from_str(line));
+            current_map.add_range(CustomMapRange::from_str_input(line));
         }
     }
     if is_building_map {
@@ -237,11 +243,11 @@ pub fn part_2(input: &str) -> u64 {
     let seeds: Vec<u64> = input_lines
         .next()
         .unwrap()
-        .split(":")
+        .split(':')
         .last()
         .unwrap()
         .trim()
-        .split(" ")
+        .split(' ')
         .map(|f| f.parse::<u64>().unwrap())
         .collect();
 
@@ -264,8 +270,7 @@ pub fn part_2(input: &str) -> u64 {
             if is_building_map {
                 last_src = last_src
                     .iter()
-                    .map(|f| current_map.get_range(f))
-                    .flatten()
+                    .flat_map(|f| current_map.get_range(f))
                     .collect();
                 is_building_map = false;
                 current_map.clear();
@@ -274,14 +279,13 @@ pub fn part_2(input: &str) -> u64 {
         } else if !is_building_map && line.contains("map") {
             is_building_map = true;
         } else {
-            current_map.add_range(CustomMapRange::from_str(line));
+            current_map.add_range(CustomMapRange::from_str_input(line));
         }
     }
     if is_building_map {
         last_src = last_src
             .iter()
-            .map(|f| current_map.get_range(f))
-            .flatten()
+            .flat_map(|f| current_map.get_range(f))
             .collect();
     }
 
@@ -295,11 +299,11 @@ mod tests_day05 {
 
     #[test]
     fn test_custom_map_range() {
-        let map = CustomMapRange::from_str("50 98 2");
-        let map2 = CustomMapRange::from_str("52 50 48");
+        let map = CustomMapRange::from_str_input("50 98 2");
+        let map2 = CustomMapRange::from_str_input("52 50 48");
         assert_eq!(map.get(98).unwrap(), 50);
         assert_eq!(map2.get(79).unwrap(), 81);
-        assert_eq!(map.get(14).is_none(), true);
+        assert!(map.get(14).is_none());
         let res = map.get_range(&CustomRange::new(96, 6));
         assert_eq!(res.len(), 3);
         assert_eq!(res[0].range.length, 2);
@@ -310,8 +314,8 @@ mod tests_day05 {
     #[test]
     fn test_multiple_map_range() {
         let mut map = CustomMultipleMapRange { ranges: Vec::new() };
-        map.add_range(CustomMapRange::from_str("50 98 2"));
-        map.add_range(CustomMapRange::from_str("52 50 48"));
+        map.add_range(CustomMapRange::from_str_input("50 98 2"));
+        map.add_range(CustomMapRange::from_str_input("52 50 48"));
         assert_eq!(map.get(55), 57);
         assert_eq!(map.get(79), 81);
         assert_eq!(map.get(14), 14);
@@ -327,8 +331,8 @@ mod tests_day05 {
     #[test]
     fn test_range_get() {
         let mut map = CustomMultipleMapRange { ranges: Vec::new() };
-        map.add_range(CustomMapRange::from_str("50 90 5"));
-        map.add_range(CustomMapRange::from_str("55 95 5"));
+        map.add_range(CustomMapRange::from_str_input("50 90 5"));
+        map.add_range(CustomMapRange::from_str_input("55 95 5"));
         let res = map.get_range(&CustomRange {
             start_src: 90,
             length: 10,
@@ -353,4 +357,3 @@ mod tests_day05 {
         assert_eq!(part_2(input), 46);
     }
 }
-

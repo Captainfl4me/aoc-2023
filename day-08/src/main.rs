@@ -52,8 +52,8 @@ fn part_2(input: &str) -> u64 {
 
     let starting_points: Vec<&str> = map
         .keys()
-        .filter(|k| (**k).ends_with("A"))
-        .map(|a| *a)
+        .filter(|k| (**k).ends_with('A'))
+        .copied()
         .collect();
     let mut cycle_length: Vec<u64> = Vec::new();
     for start_point in starting_points.iter() {
@@ -69,13 +69,13 @@ fn part_2(input: &str) -> u64 {
             }
             count_iter += 1;
             path_index = (path_index + 1) % path.len();
-            if current_point.ends_with("Z") {
+            if current_point.ends_with('Z') {
                 break;
             }
         }
         cycle_length.push(count_iter);
     }
-    cycle_length.into_iter().reduce(|a, b| lcm(a, b)).unwrap()
+    cycle_length.into_iter().reduce(lcm).unwrap()
 }
 
 struct Direction {
@@ -110,4 +110,3 @@ mod tests_day08 {
         assert_eq!(part_2(input), 6);
     }
 }
-

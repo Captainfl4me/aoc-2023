@@ -1,7 +1,7 @@
-use regex::Regex;
+use itertools::Itertools;
 use ndarray::prelude::*;
 use ndarray_linalg::*;
-use itertools::Itertools;
+use regex::Regex;
 
 fn main() {
     let input = include_str!("../../aoc-2023-inputs/day-24/input.txt");
@@ -47,19 +47,18 @@ impl Path {
     }
 
     pub fn is_point_on_2dpath(&self, point: (f64, f64)) -> bool {
-        if self.v0.0 > 0 && (self.point.0 as f64 > point.0) {
+        if self.v0.0 > 0 && (self.point.0 as f64 > point.0)
+            || self.v0.0 < 0 && (self.point.0 as f64) < point.0
+        {
             return false;
-        } else if self.v0.0 < 0 && (self.point.0 as f64) < point.0 {
+        }
+        if self.v0.1 > 0 && (self.point.1 as f64) > point.1
+            || self.v0.1 < 0 && (self.point.1 as f64) < point.1
+        {
             return false;
         }
 
-        if self.v0.1 > 0 && (self.point.1 as f64) > point.1 {
-            return false;
-        } else if self.v0.1 < 0 && (self.point.1 as f64) < point.1 {
-            return false;
-        }
-
-        return true;
+        true
     }
 }
 
@@ -90,10 +89,10 @@ fn part_1(input: &str, min_box: u64, max_box: u64) -> u64 {
                     && x <= max_box as f64
                     && y >= min_box as f64
                     && y <= max_box as f64
+                    && paths[i].is_point_on_2dpath((x, y))
+                    && paths[j].is_point_on_2dpath((x, y))
                 {
-                    if paths[i].is_point_on_2dpath((x, y)) && paths[j].is_point_on_2dpath((x, y)) {
-                        count += 1;
-                    }
+                    count += 1;
                 }
             }
         }
@@ -103,20 +102,66 @@ fn part_1(input: &str, min_box: u64, max_box: u64) -> u64 {
 }
 
 fn solve_system(p1: &Path, p2: &Path, p3: &Path) -> Vec<f64> {
-    let a: Array2<i64> = arr2(&[[0, p2.v0.2 - p1.v0.2, p1.v0.1 - p2.v0.1, 0, p1.point.2 - p2.point.2, p2.point.1 - p1.point.1],
-            [p1.v0.2 - p2.v0.2, 0, p2.v0.0 - p1.v0.0, p2.point.2 - p1.point.2, 0, p1.point.0 - p2.point.0],
-            [p2.v0.1 - p1.v0.1, p1.v0.0 - p2.v0.0, 0, p1.point.1 - p2.point.1, p2.point.0 - p1.point.0, 0],
-            [0, p3.v0.2 - p1.v0.2, p1.v0.1 - p3.v0.1, 0, p1.point.2 - p3.point.2, p3.point.1 - p1.point.1],
-            [p1.v0.2 - p3.v0.2, 0, p3.v0.0 - p1.v0.0, p3.point.2 - p1.point.2, 0, p1.point.0 - p3.point.0],
-            [p3.v0.1 - p1.v0.1, p1.v0.0 - p3.v0.0, 0, p1.point.1 - p3.point.1, p3.point.0 - p1.point.0, 0]]);
+    let a: Array2<i64> = arr2(&[
+        [
+            0,
+            p2.v0.2 - p1.v0.2,
+            p1.v0.1 - p2.v0.1,
+            0,
+            p1.point.2 - p2.point.2,
+            p2.point.1 - p1.point.1,
+        ],
+        [
+            p1.v0.2 - p2.v0.2,
+            0,
+            p2.v0.0 - p1.v0.0,
+            p2.point.2 - p1.point.2,
+            0,
+            p1.point.0 - p2.point.0,
+        ],
+        [
+            p2.v0.1 - p1.v0.1,
+            p1.v0.0 - p2.v0.0,
+            0,
+            p1.point.1 - p2.point.1,
+            p2.point.0 - p1.point.0,
+            0,
+        ],
+        [
+            0,
+            p3.v0.2 - p1.v0.2,
+            p1.v0.1 - p3.v0.1,
+            0,
+            p1.point.2 - p3.point.2,
+            p3.point.1 - p1.point.1,
+        ],
+        [
+            p1.v0.2 - p3.v0.2,
+            0,
+            p3.v0.0 - p1.v0.0,
+            p3.point.2 - p1.point.2,
+            0,
+            p1.point.0 - p3.point.0,
+        ],
+        [
+            p3.v0.1 - p1.v0.1,
+            p1.v0.0 - p3.v0.0,
+            0,
+            p1.point.1 - p3.point.1,
+            p3.point.0 - p1.point.0,
+            0,
+        ],
+    ]);
     let a: Array2<f64> = a.mapv(|x| x as f64);
 
-    let b: Array1<i64> = -arr1(&[p1.point.1*p1.v0.2 - p2.point.1*p2.v0.2 - p1.point.2*p1.v0.1 + p2.point.2*p2.v0.1,
-            p1.point.2*p1.v0.0 - p2.point.2*p2.v0.0 - p1.point.0*p1.v0.2 + p2.point.0*p2.v0.2,
-            p1.point.0*p1.v0.1 - p2.point.0*p2.v0.1 - p1.point.1*p1.v0.0 + p2.point.1*p2.v0.0,
-            p1.point.1*p1.v0.2 - p3.point.1*p3.v0.2 - p1.point.2*p1.v0.1 + p3.point.2*p3.v0.1,
-            p1.point.2*p1.v0.0 - p3.point.2*p3.v0.0 - p1.point.0*p1.v0.2 + p3.point.0*p3.v0.2,
-            p1.point.0*p1.v0.1 - p3.point.0*p3.v0.1 - p1.point.1*p1.v0.0 + p3.point.1*p3.v0.0]);
+    let b: Array1<i64> = -arr1(&[
+        p1.point.1 * p1.v0.2 - p2.point.1 * p2.v0.2 - p1.point.2 * p1.v0.1 + p2.point.2 * p2.v0.1,
+        p1.point.2 * p1.v0.0 - p2.point.2 * p2.v0.0 - p1.point.0 * p1.v0.2 + p2.point.0 * p2.v0.2,
+        p1.point.0 * p1.v0.1 - p2.point.0 * p2.v0.1 - p1.point.1 * p1.v0.0 + p2.point.1 * p2.v0.0,
+        p1.point.1 * p1.v0.2 - p3.point.1 * p3.v0.2 - p1.point.2 * p1.v0.1 + p3.point.2 * p3.v0.1,
+        p1.point.2 * p1.v0.0 - p3.point.2 * p3.v0.0 - p1.point.0 * p1.v0.2 + p3.point.0 * p3.v0.2,
+        p1.point.0 * p1.v0.1 - p3.point.0 * p3.v0.1 - p1.point.1 * p1.v0.0 + p3.point.1 * p3.v0.0,
+    ]);
     let b: Array1<f64> = b.mapv(|x| x as f64);
 
     let x = a.solve(&b).unwrap();
@@ -141,20 +186,23 @@ fn part_2(input: &str) -> u64 {
         );
         paths.push(path);
     }
-    
+
     // Solve the system of equations for the first 10 combinations of paths (to prevent float
     // imprecision errors)
     let results = paths
         .iter()
         .tuple_combinations()
-        .map(|(p1, p2, p3)| { let r = solve_system(p1, p2, p3); vec![r[0], r[1], r[2]]})
+        .map(|(p1, p2, p3)| {
+            let r = solve_system(p1, p2, p3);
+            vec![r[0], r[1], r[2]]
+        })
         .take(10)
         .collect::<Vec<_>>();
 
     let mut x = 0.0;
     let mut y = 0.0;
     let mut z = 0.0;
-    
+
     for r in results.iter() {
         x += r[0];
         y += r[1];

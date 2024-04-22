@@ -92,7 +92,7 @@ fn part_1(input: &str, step_count: u64) -> u64 {
         }
         states = next_states;
     }
-    assert_eq!(states.iter().all(|s| s.step == step_count), true);
+    assert!(states.iter().all(|s| s.step == step_count));
     states.len() as u64
 }
 

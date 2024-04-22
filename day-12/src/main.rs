@@ -7,16 +7,16 @@ fn main() {
 }
 
 fn part_1(input: &str) -> u64 {
-    input.lines().map(|l| find_number_of_arr(l)).sum()
+    input.lines().map(find_number_of_arr).sum()
 }
 fn part_2(input: &str) -> u64 {
-    input.lines().map(|l| find_number_of_arr2(l)).sum()
+    input.lines().map(find_number_of_arr2).sum()
 }
 
 fn find_number_of_arr(input: &str) -> u64 {
-    let input_split = input.split(" ").collect::<Vec<&str>>();
+    let input_split = input.split(' ').collect::<Vec<&str>>();
     let checksums: Vec<usize> = input_split[1]
-        .split(",")
+        .split(',')
         .map(|n| n.parse::<usize>().unwrap())
         .collect();
 
@@ -28,28 +28,26 @@ fn find_number_of_arr(input: &str) -> u64 {
         for (k, v) in pos.iter() {
             let filter_checksums = &checksums[(index + 1)..];
             let filter_checksums_sum: usize = filter_checksums.iter().sum();
-            let filter_checksums_count: usize = filter_checksums.iter().count();
+            let filter_checksums_count: usize = filter_checksums.len();
             let max_length =
                 springs_arrangment.len() + filter_checksums_count - filter_checksums_sum;
             for n in (*k)..max_length {
                 if (n + checksum - 1) < springs_arrangment.len()
                     && !springs_arrangment[n..(n + *checksum)].contains(&'.')
-                {
-                    if (index == (checksums.len() - 1)
+                    && ((index == (checksums.len() - 1)
                         && !springs_arrangment[(n + *checksum)..].contains(&'#'))
                         || (index < (checksums.len() - 1)
                             && (n + checksum) < springs_arrangment.len()
-                            && springs_arrangment[n + checksum] != '#')
-                    {
-                        new_pos.insert(
-                            n + checksum + 1,
-                            if new_pos.contains_key(&(n + checksum + 1)) {
-                                new_pos[&(n + checksum + 1)] + *v
-                            } else {
-                                *v
-                            },
-                        );
-                    }
+                            && springs_arrangment[n + checksum] != '#'))
+                {
+                    new_pos.insert(
+                        n + checksum + 1,
+                        if new_pos.contains_key(&(n + checksum + 1)) {
+                            new_pos[&(n + checksum + 1)] + *v
+                        } else {
+                            *v
+                        },
+                    );
                 }
                 if springs_arrangment[n] == '#' {
                     break;
@@ -61,13 +59,14 @@ fn find_number_of_arr(input: &str) -> u64 {
     pos.values().map(|v| *v as u64).sum()
 }
 
+#[allow(clippy::useless_vec)]
 fn find_number_of_arr2(input: &str) -> u64 {
-    let input_split = input.split(" ").collect::<Vec<&str>>();
+    let input_split = input.split(' ').collect::<Vec<&str>>();
     let checksums: Vec<usize> = vec![
         input_split[1]
-            .split(",")
+            .split(',')
             .map(|n| n.parse::<usize>().unwrap())
-            .collect::<Vec<usize>>();
+            .collect::<Vec<_>>();
         5
     ]
     .iter()
@@ -75,8 +74,8 @@ fn find_number_of_arr2(input: &str) -> u64 {
     .cloned()
     .collect();
 
-    let springs_arrangment = vec![input_split[0]; 5]
-        .join(&"?")
+    let springs_arrangment = [input_split[0]; 5]
+        .join("?")
         .chars()
         .collect::<Vec<char>>();
     let mut pos: HashMap<usize, usize> = HashMap::new();
@@ -86,28 +85,22 @@ fn find_number_of_arr2(input: &str) -> u64 {
         for (k, v) in pos.iter() {
             let filter_checksums = &checksums[(index + 1)..];
             let filter_checksums_sum: usize = filter_checksums.iter().sum();
-            let filter_checksums_count: usize = filter_checksums.iter().count();
+            let filter_checksums_count: usize = filter_checksums.len();
             let max_length =
                 springs_arrangment.len() + filter_checksums_count - filter_checksums_sum;
             for n in (*k)..max_length {
-                if (n + checksum - 1) < springs_arrangment.len()
-                    && !springs_arrangment[n..(n + *checksum)].contains(&'.')
-                {
-                    if (index == (checksums.len() - 1)
-                        && !springs_arrangment[(n + *checksum)..].contains(&'#'))
-                        || (index < (checksums.len() - 1)
+                if (n + checksum - 1) < springs_arrangment.len() && !springs_arrangment[n..(n + *checksum)].contains(&'.') && ((index == (checksums.len() - 1)
+                        && !springs_arrangment[(n + *checksum)..].contains(&'#')) || (index < (checksums.len() - 1)
                             && (n + checksum) < springs_arrangment.len()
-                            && springs_arrangment[n + checksum] != '#')
-                    {
-                        new_pos.insert(
-                            n + checksum + 1,
-                            if new_pos.contains_key(&(n + checksum + 1)) {
-                                new_pos[&(n + checksum + 1)] + *v
-                            } else {
-                                *v
-                            },
-                        );
-                    }
+                            && springs_arrangment[n + checksum] != '#')) {
+                    new_pos.insert(
+                        n + checksum + 1,
+                        if new_pos.contains_key(&(n + checksum + 1)) {
+                            new_pos[&(n + checksum + 1)] + *v
+                        } else {
+                            *v
+                        },
+                    );
                 }
                 if springs_arrangment[n] == '#' {
                     break;
@@ -143,4 +136,3 @@ mod test_day12 {
         assert_eq!(find_number_of_arr2("?###???????? 3,2,1"), 506250);
     }
 }
-

@@ -6,10 +6,7 @@ fn main() {
 }
 
 fn part_2(input: &str) -> u64 {
-    let mut hands = input
-        .lines()
-        .map(|line| Hand::from_str(line))
-        .collect::<Vec<Hand>>();
+    let mut hands = input.lines().map(Hand::from_str).collect::<Vec<Hand>>();
     hands.sort_by(|a, b| a.cmp(b));
     hands
         .into_iter()
@@ -73,7 +70,7 @@ enum HandType {
 }
 impl Hand {
     pub fn from_str(s: &str) -> Hand {
-        let split = s.split(" ").collect::<Vec<&str>>();
+        let split = s.split(' ').collect::<Vec<&str>>();
         let mut cards = Vec::new();
         for c in split[0].chars() {
             cards.push(Card::from_char(&c).unwrap());
@@ -95,10 +92,7 @@ impl Hand {
         let hand_sorted_og = self.sorted().cards;
         let mut hand_sorted_dedup = hand_sorted_og.clone();
         hand_sorted_dedup.dedup();
-        hand_sorted_dedup = hand_sorted_dedup
-            .into_iter()
-            .filter(|card| card != &Card::J)
-            .collect();
+        hand_sorted_dedup.retain(|card| card != &Card::J);
 
         let mut card_map: HashMap<Card, u32> = HashMap::new();
         for card in hand_sorted_og.iter() {
@@ -106,7 +100,7 @@ impl Hand {
             *count += 1;
         }
 
-        if hand_sorted_dedup.len() == 1 || hand_sorted_dedup.len() == 0 {
+        if hand_sorted_dedup.len() == 1 || hand_sorted_dedup.is_empty() {
             HandType::FiveOfAKind
         } else if hand_sorted_dedup.len() == 2 {
             let joker_count = *card_map.get(&Card::J).get_or_insert(&0);
@@ -119,25 +113,19 @@ impl Hand {
                 } else {
                     HandType::FullHouse
                 }
+            } else if card_map.values().any(|&x| x == 4) {
+                HandType::FourOfAKind
             } else {
-                if card_map.values().any(|&x| x == 4) {
-                    HandType::FourOfAKind
-                } else {
-                    HandType::FullHouse
-                }
+                HandType::FullHouse
             }
         } else if hand_sorted_dedup.len() == 3 {
             // Three of a kind or two pairs
             let joker_count = *card_map.get(&Card::J).get_or_insert(&0);
 
-            if *joker_count >= 1 {
+            if *joker_count >= 1 || card_map.values().any(|&x| x == 3) {
                 HandType::ThreeOfAKind
             } else {
-                if card_map.values().any(|&x| x == 3) {
-                    HandType::ThreeOfAKind
-                } else {
-                    HandType::TwoPairs
-                }
+                HandType::TwoPairs
             }
         } else if hand_sorted_dedup.len() == 4 {
             HandType::OnePair
@@ -152,10 +140,8 @@ impl Hand {
 
         if a_hand == b_hand {
             for (index, card) in self.cards.iter().enumerate() {
-                if card > &b.cards[index] {
-                    return Ordering::Greater;
-                } else if card < &b.cards[index] {
-                    return Ordering::Less;
+                if card != &b.cards[index] {
+                    return card.cmp(&b.cards[index]);
                 }
             }
             Ordering::Equal
@@ -220,4 +206,3 @@ mod tests_day07_02 {
         assert_eq!(part_2(input), 5905);
     }
 }
-

@@ -66,7 +66,7 @@ impl Race {
     pub fn parse_from_str_part2(input: &str) -> Race {
         let lines: Vec<u64> = input
             .lines()
-            .map(|s| s.split(":").collect::<Vec<&str>>()[1])
+            .map(|s| s.split(':').collect::<Vec<&str>>()[1])
             .map(|f| {
                 f.chars()
                     .filter(|c| !c.is_whitespace())
@@ -115,4 +115,3 @@ mod tests_day06 {
         assert_eq!(margin, 71503);
     }
 }
-

@@ -29,9 +29,9 @@ fn parse_bricks(input: &str) -> Vec<Brick> {
     let mut bricks = Vec::new();
     for (i, line) in input.lines().enumerate() {
         let parts = line
-            .split("~")
+            .split('~')
             .map(|x| {
-                x.split(",")
+                x.split(',')
                     .map(|x| x.parse::<usize>().unwrap())
                     .collect::<Vec<_>>()
             })
@@ -48,7 +48,7 @@ fn parse_bricks(input: &str) -> Vec<Brick> {
         };
         bricks.push(Brick::new(i, start, end));
     }
-    bricks.sort_by(|a, b| a.get_lowest_z().cmp(&b.get_lowest_z()));
+    bricks.sort_by_key(|a| a.get_lowest_z());
     bricks
 }
 
@@ -82,11 +82,11 @@ fn apply_gravity_bricks(bricks: &mut Vec<Brick>) -> usize {
     moved_bricks
 }
 
-fn find_safe_bricks(bricks: &Vec<Brick>) -> Vec<&Brick> {
+fn find_safe_bricks(bricks: &[Brick]) -> Vec<&Brick> {
     bricks
         .iter()
         .filter(|brick| {
-            let mut b = (*brick).clone();
+            let mut b = **brick;
             b.move_up();
 
             let bricks_above = bricks
@@ -103,7 +103,7 @@ fn find_safe_bricks(bricks: &Vec<Brick>) -> Vec<&Brick> {
             bricks_above
                 .iter()
                 .map(|brick| {
-                    let mut b: Brick = (*brick).clone();
+                    let mut b: Brick = **brick;
                     b.move_down();
                     let mut brick_support = bricks
                         .iter()

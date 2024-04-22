@@ -37,7 +37,7 @@ fn part_1(input: &str) -> u64 {
 fn part_2(input: &str) -> u64 {
     let mut max_energy = 0;
 
-    for start_dir in vec![
+    for start_dir in [
         BeamDirection::Up,
         BeamDirection::Down,
         BeamDirection::Left,
@@ -157,7 +157,7 @@ impl Tile {
         self.beam_history.contains(&beam.direction)
     }
     fn apply_transform(&mut self, beam: &Beam) -> Vec<Beam> {
-        self.beam_history.push(beam.clone().direction);
+        self.beam_history.push(beam.direction);
         self.is_energized = true;
         match self.tile_type {
             TileType::Empty => vec![*beam],
@@ -207,4 +207,3 @@ mod tests_day16 {
         assert_eq!(part_2(input), 51);
     }
 }
-

@@ -6,10 +6,7 @@ fn main() {
 }
 
 fn part_1(input: &str) -> u64 {
-    let mut hands = input
-        .lines()
-        .map(|line| Hand::from_str(line))
-        .collect::<Vec<Hand>>();
+    let mut hands = input.lines().map(Hand::from_str).collect::<Vec<Hand>>();
     hands.sort_by(|a, b| a.cmp(b));
     hands
         .into_iter()
@@ -73,7 +70,7 @@ enum HandType {
 }
 impl Hand {
     pub fn from_str(s: &str) -> Hand {
-        let split = s.split(" ").collect::<Vec<&str>>();
+        let split = s.split(' ').collect::<Vec<&str>>();
         let mut cards = Vec::new();
         for c in split[0].chars() {
             cards.push(Card::from_char(&c).unwrap());
@@ -145,10 +142,8 @@ impl Hand {
 
         if a_hand == b_hand {
             for (index, card) in self.cards.iter().enumerate() {
-                if card > &b.cards[index] {
-                    return Ordering::Greater;
-                } else if card < &b.cards[index] {
-                    return Ordering::Less;
+                if *card != b.cards[index] {
+                    return card.cmp(&b.cards[index]);
                 }
             }
             Ordering::Equal
